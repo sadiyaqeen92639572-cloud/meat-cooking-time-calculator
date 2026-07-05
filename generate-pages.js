@@ -777,6 +777,9 @@ HUBS.forEach(hub => {
   <h2 class="st">${esc(m.label)} Cooking Times by Weight</h2>
   <p>Jump to a pre-filled calculator for your exact joint size:</p>
   <div class="link-grid">${weightLinksFor(hub.key, m.slug)}</div>
+  <h2 class="st">🇺🇸 ${esc(m.label)} Cooking Times by Pound (US)</h2>
+  <p>US recipes and °F ovens? Jump to a pre-filled calculator by pound:</p>
+  <div class="link-grid">${lbWeightLinksFor(hub.key)}</div>
   ${cutLinksFor(hub.key) ? `<h2 class="st">${esc(m.label)} Cuts</h2><div class="link-grid">${cutLinksFor(hub.key)}</div>` : ''}
   ${ctaBlock()}
   ${methodBlock(cfg, m.label)}
