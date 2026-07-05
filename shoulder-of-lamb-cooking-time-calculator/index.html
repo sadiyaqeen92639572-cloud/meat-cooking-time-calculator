@@ -38,7 +38,7 @@
      "name": "How long to cook shoulder of lamb?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "About 120 minutes per kg plus 30 minutes at 160°C, to 90°C internal. Shoulder is fattier than leg — slow-roast at 160°C until it pulls apart with a fork."
+      "text": "About 120 minutes per kg plus 30 minutes at 160°C fan, to 90°C internal. Shoulder is fattier than leg — slow-roast at 160°C until it pulls apart with a fork."
      }
     },
     {
@@ -46,7 +46,7 @@
      "name": "What oven temperature for shoulder of lamb?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Cook at 160°C fan (170°C conventional / 325°F). Internal target 90°C. Rest 20 minutes."
+      "text": "Cook at 160°C / 325°F. Internal target 90°C. Rest 20 minutes."
      }
     }
    ]
@@ -183,7 +183,7 @@ footer a { color:#e9d8c6; }
 <body>
 
 <header><div class="container">
-  <div class="badge">🐑 Shoulder of lamb</div>
+  <div class="badge">🐑 Shoulder of lamb · °C · UK</div>
   <h1>Shoulder of lamb Cooking Time Calculator</h1>
   <p>Shoulder is fattier than leg — slow-roast at 160°C until it pulls apart with a fork.</p>
 </div></header>
@@ -191,15 +191,7 @@ footer a { color:#e9d8c6; }
 <div class="tool-wrapper">
   <div class="tool-card">
     <div class="form-grid">
-      <div class="form-group"><label id="wLabel">Weight (kg)</label>
-         <div style="display:flex;gap:6px;">
-           <input type="number" id="wNum" min="0.2" max="12" step="0.1" value="2" placeholder="e.g. 2" style="flex:1;">
-           <div class="seg" id="unitSeg" style="flex:0 0 auto;">
-             <button type="button" class="active" data-unit="kg" onclick="setUnit('kg')" style="min-width:52px;">kg</button>
-             <button type="button" data-unit="lbs" onclick="setUnit('lbs')" style="min-width:52px;">lbs</button>
-           </div>
-         </div>
-       </div>
+      <div class="form-group"><label>Weight (kg)</label><input type="number" id="wNum" min="0.2" max="12" step="0.1" value="2" placeholder="e.g. 2"></div>
        <div class="form-group"><label>Oven type</label><select id="ovenType"><option value="fan">Fan / convection</option><option value="conv">Conventional</option></select></div>
       
       
@@ -219,56 +211,34 @@ footer a { color:#e9d8c6; }
       <div class="result-grid" style="margin-bottom:14px;">
         <div class="r-stat"><div class="sv" id="r-range"></div><div class="sl">Guidance range</div></div>
         <div class="r-stat"><div class="sv" id="r-ready"></div><div class="sl">Ready if in now</div></div>
-        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl" id="r-perkg-label">Per kg</div></div>
+        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl">Per kg</div></div>
       </div>
       <div class="therm-notice">🌡️ <strong>Always confirm with a meat thermometer.</strong> Times are guidance — the internal temperature is what makes it safe and perfect.</div>
     </div>
   </div>
   <script>
-  const PAGE = {"mode":"single","doneness":null,"single":{"label":"Slow-roasted, pulls apart","per500":60,"base":30,"range":[55,70],"internalC":90,"internalF":194},"ovenC":160,"ovenConvC":170,"ovenF":325,"restMin":20,"defaultDoneness":null,"fixedWeight":null};
+  const PAGE = {"mode":"single","doneness":null,"single":{"label":"Slow-roasted, pulls apart","per500":60,"base":30,"range":[55,70],"internalC":90,"internalF":194},"ovenC":160,"ovenConvC":170,"ovenF":325,"restMin":20,"defaultDoneness":null,"fixedWeight":null,"unit":"kg","tempF":false};
   let DONE = PAGE.defaultDoneness;
   const LB_PER_KG = 2.20462;
-  let WEIGHT_UNIT = 'kg';
-  function setUnit(unit){
-    if(unit===WEIGHT_UNIT) return;
-    const input = document.getElementById('wNum');
-    const val = parseFloat(input.value)||0;
-    if(unit==='lbs') input.value = Math.round(val*LB_PER_KG*10)/10;
-    else input.value = Math.round((val/LB_PER_KG)*10)/10;
-    WEIGHT_UNIT = unit;
-    document.querySelectorAll('#unitSeg button').forEach(b=>b.classList.toggle('active', b.dataset.unit===unit));
-    const lbl = document.getElementById('wLabel');
-    if(lbl) lbl.textContent = 'Weight ('+unit+')';
-    input.min = unit==='lbs' ? 0.5 : 0.2;
-    input.max = unit==='lbs' ? 26 : 12;
-    input.placeholder = unit==='lbs' ? 'e.g. 4.5' : 'e.g. 2';
-  }
   function pickDone(b){ document.querySelectorAll('#doneSeg button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); DONE = b.dataset.done; }
   function fmtTime(min){ min=Math.round(min); const h=Math.floor(min/60), m=min%60; if(h===0)return m+' min'; if(m===0)return h+' hr'; return h+' hr '+m+' min'; }
   function calculate(){
     const wRaw = parseFloat(document.getElementById('wNum').value)||0;
-    if(wRaw<=0){ alert('Please enter a weight in '+WEIGHT_UNIT+'.'); return; }
-    const kg = WEIGHT_UNIT==='lbs' ? wRaw/LB_PER_KG : wRaw;
+    if(wRaw<=0){ alert('Please enter a weight in '+PAGE.unit+'.'); return; }
+    const kg = PAGE.unit==='lb' ? wRaw/LB_PER_KG : wRaw;
     const oven = (document.getElementById('ovenType')||{}).value || 'fan';
     const d = PAGE.mode==='doneness' ? PAGE.doneness[DONE] : PAGE.single;
     const mid = d.per500*(kg*2)+d.base;
     const lo = d.range[0]*(kg*2)+d.base, hi = d.range[1]*(kg*2)+d.base;
     const ovenC = oven==='conv' ? PAGE.ovenConvC : PAGE.ovenC;
     const ovenF = Math.round((ovenC*9/5+32)/5)*5;
-    const wLabel = WEIGHT_UNIT==='lbs' ? wRaw+' lbs' : kg+' kg';
     document.getElementById('r-time').textContent = fmtTime(mid);
-    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wLabel+' · '+(oven==='conv'?'conventional':'fan')+' oven';
-    document.getElementById('r-oven').textContent = ovenC+'°C / '+ovenF+'°F';
-    document.getElementById('r-internal').textContent = d.internalC+'°C / '+d.internalF+'°F';
+    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wRaw+' '+PAGE.unit+' · '+(oven==='conv'?'conventional':'fan')+' oven';
+    document.getElementById('r-oven').textContent = PAGE.tempF ? ovenF+'°F / '+ovenC+'°C' : ovenC+'°C / '+ovenF+'°F';
+    document.getElementById('r-internal').textContent = PAGE.tempF ? d.internalF+'°F / '+d.internalC+'°C' : d.internalC+'°C / '+d.internalF+'°F';
     document.getElementById('r-rest').textContent = PAGE.restMin+' min';
     document.getElementById('r-range').textContent = fmtTime(lo)+' – '+fmtTime(hi);
-    if(WEIGHT_UNIT==='lbs'){
-      document.getElementById('r-perkg').textContent = fmtTime((d.per500*2)/LB_PER_KG)+'/lb';
-      document.getElementById('r-perkg-label').textContent = 'Per lb';
-    } else {
-      document.getElementById('r-perkg').textContent = fmtTime(d.per500*2)+'/kg';
-      document.getElementById('r-perkg-label').textContent = 'Per kg';
-    }
+    document.getElementById('r-perkg').textContent = PAGE.unit==='lb' ? fmtTime((d.per500*2)/LB_PER_KG)+'/lb' : fmtTime(d.per500*2)+'/kg';
     const ready = new Date(Date.now()+mid*60000);
     document.getElementById('r-ready').textContent = ready.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     document.getElementById('result').style.display='block';
@@ -289,8 +259,8 @@ footer a { color:#e9d8c6; }
     </div>
     <div class="cta-card">
       <h3>🍳 Roasting kit that gets results</h3>
-      <p>A heavy roasting tin, a leave-in probe and a sharp carving knife make a real difference to your Sunday roast.</p>
-      <a href="https://www.amazon.co.uk/s?k=roasting+tin+set&tag=YOURTAG-21" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
+      <p>A heavy roasting pan, a leave-in probe and a sharp carving knife make a real difference to your roast.</p>
+      <a href="https://www.amazon.co.uk/s?k=roasting+pan+set&tag=YOURTAG-21" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
     </div>
   </div>
   <div class="adslot">Advertisement</div>
@@ -299,12 +269,12 @@ footer a { color:#e9d8c6; }
   <div class="method">
     <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard UK roasting guidance · applied deterministically · verify with a thermometer</p>
     <table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
-      <tr><td>Min per 500 g</td><td class="hl">60 min (range 55–70)</td><td>UK roasting guides</td></tr><tr><td>Internal target</td><td class="hl">90°C / 194°F</td><td>FSA / thermometer</td></tr><tr><td>Base offset</td><td class="hl">30 min</td><td>Standard</td></tr><tr><td>Oven</td><td class="hl">220°C sear for 20 min, then 160°C</td><td>Method</td></tr><tr><td>Resting</td><td class="hl">20 min</td><td>Best practice</td></tr>
+      <tr><td>Time per kg</td><td class="hl">60 min per 500 g (range 55–70/500 g)</td><td>UK roasting guides</td></tr><tr><td>Internal target</td><td class="hl">90°C / 194°F</td><td>USDA / thermometer</td></tr><tr><td>Base offset</td><td class="hl">30 min</td><td>Standard</td></tr><tr><td>Oven</td><td class="hl">220°C sear for 20 min, then 160°C</td><td>Method</td></tr><tr><td>Resting</td><td class="hl">20 min</td><td>Best practice</td></tr>
     </tbody></table>
     <div class="code">
 <span class="c">— Shoulder of lamb cooking time —</span><br>
 <span class="k">total_min</span> = min_per_500g × (weight_g / 500) + base_offset<br>
-<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight_g / 500) + base_offset<br>
+<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight / 500) + base_offset<br>
 <span class="k">conventional_oven</span> = fan_temp + 10–20°C (same time)<br>
 <span class="k">fahrenheit</span> = derived table from °C<br>
 <span class="c">— algorithm —</span><br>
@@ -315,8 +285,8 @@ lookup(meat, cut, doneness) → point_estimate → guidance_range<br>
   </div>
   
   <h2 class="st">Frequently Asked Questions</h2>
-  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">How long to cook shoulder of lamb?</button><div class="faq-a">About 120 minutes per kg plus 30 minutes at 160°C, to 90°C internal. Shoulder is fattier than leg — slow-roast at 160°C until it pulls apart with a fork.</div></div>
-  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What oven temperature for shoulder of lamb?</button><div class="faq-a">Cook at 160°C fan (170°C conventional / 325°F). Internal target 90°C. Rest 20 minutes.</div></div>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">How long to cook shoulder of lamb?</button><div class="faq-a">About 120 minutes per kg plus 30 minutes at 160°C fan, to 90°C internal. Shoulder is fattier than leg — slow-roast at 160°C until it pulls apart with a fork.</div></div>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What oven temperature for shoulder of lamb?</button><div class="faq-a">Cook at 160°C / 325°F. Internal target 90°C. Rest 20 minutes.</div></div>
   <h2 class="st">More Lamb Cuts</h2>
   <div class="link-grid"><a class="link-card" href="/boneless-leg-of-lamb-cooking-time-calculator/">Boneless leg of lamb<div class="sub">boneless leg of lamb cooking time calculator</div></a><a class="link-card" href="/slow-roast-leg-of-lamb-cooking-time-calculator/">Slow-roast leg of lamb<div class="sub">slow roast leg of lamb cooking time calculator</div></a><a class="link-card" href="/shoulder-of-lamb-cooking-time-calculator/">Shoulder of lamb<div class="sub">shoulder of lamb cooking time calculator</div></a><a class="link-card" href="/half-leg-of-lamb-cooking-time-calculator/">Half leg of lamb<div class="sub">half leg of lamb cooking time calculator</div></a><a class="link-card" href="/roast-leg-of-lamb-cooking-time-calculator/">Roast leg of lamb<div class="sub">roast leg of lamb cooking time calculator</div></a><a class="link-card" href="/rack-of-lamb-cooking-time-calculator/">Rack of lamb<div class="sub">rack of lamb cooking time by weight</div></a><a class="link-card" href="/butterflied-leg-of-lamb-cooking-time-calculator/">Butterflied leg of lamb<div class="sub">butterflied leg of lamb cooking time calculator</div></a></div>
   <h2 class="st">Other Meat Calculators</h2>

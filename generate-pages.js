@@ -200,6 +200,30 @@ const LB_STEPS = {
 };
 
 // ─────────────────────────────────────────────────────────────
+// LOCALES — UK (root, kg/°C) and US (/us/, lb/°F). One data model,
+// two fully separate mirror sites. No unit mixing on any page.
+// ─────────────────────────────────────────────────────────────
+const LB_PER_KG = 2.20462;
+const LOCALES = {
+  uk: { id: 'uk', prefix: '', lang: 'en-GB', currency: 'GBP', amazon: 'amazon.co.uk',
+        unit: 'kg', tempF: false, steps: WEIGHT_STEPS, guideSrc: 'UK roasting guides', region: 'UK' },
+  us: { id: 'us', prefix: 'us/', lang: 'en-US', currency: 'USD', amazon: 'amazon.com',
+        unit: 'lb', tempF: true, steps: LB_STEPS, guideSrc: 'US roasting guides', region: 'US' },
+};
+// weight (in locale unit) → kilograms for the underlying formula
+function toKg(w, loc) { return loc.unit === 'lb' ? w / LB_PER_KG : w; }
+// temperature pair rendered locale-first
+function tempPair(c, f, loc) { return loc.tempF ? `${f}°F / ${c}°C` : `${c}°C / ${f}°F`; }
+// primary oven temp for a locale (used in prose)
+function ovenPrimary(m, loc) { return loc.tempF ? `${m.ovenF}°F` : `${m.ovenC}°C fan`; }
+// minutes-per-unit label
+function perUnit(per500, loc) { return loc.unit === 'lb' ? `${fmtTime(per500 * 2 / LB_PER_KG)}/lb` : `${fmtTime(per500 * 2)}/kg`; }
+// integer minutes per single unit (kg or lb)
+function unitMin(per500, loc) { return loc.unit === 'lb' ? Math.round(per500 * 2 / LB_PER_KG) : per500 * 2; }
+// internal temp value in the locale's primary unit
+function internalPrimary(c, f, loc) { return loc.tempF ? `${f}°F` : `${c}°C`; }
+
+// ─────────────────────────────────────────────────────────────
 // TIER 4 — informational pages (content + reference tables + funnel to a calculator)
 // ─────────────────────────────────────────────────────────────
 const INFO = [
@@ -480,28 +504,23 @@ function cookOf(entry) {
 }
 
 // Build the interactive calculator widget markup + embedded PAGE data + shared script.
-function calcWidget(cfg) {
-  // cfg: { mode, doneness?, single?, ovenC, ovenConvC, ovenF, restMin, defaultDoneness?, fixedWeight?, weights? }
+// loc drives the single display unit (kg/°C for UK, lb/°F for US) — no toggle.
+function calcWidget(cfg, loc) {
+  const isLb = loc.unit === 'lb';
+  const defW = cfg.defaultWeight != null ? cfg.defaultWeight : (isLb ? 4 : 2);
   const PAGE = {
     mode: cfg.mode, doneness: cfg.doneness || null, single: cfg.single || null,
     ovenC: cfg.ovenC, ovenConvC: cfg.ovenConvC, ovenF: cfg.ovenF, restMin: cfg.restMin,
     defaultDoneness: cfg.defaultDoneness || (cfg.doneness ? Object.keys(cfg.doneness)[0] : null),
     fixedWeight: cfg.fixedWeight || null,
+    unit: loc.unit, tempF: loc.tempF,
   };
   const donenessButtons = cfg.mode === 'doneness'
     ? `<div class="form-group full"><label>Doneness</label><div class="seg" id="doneSeg">${Object.keys(cfg.doneness).map(k => `<button type="button" data-done="${k}"${k === PAGE.defaultDoneness ? ' class="active"' : ''} onclick="pickDone(this)">${esc(cfg.doneness[k].label)}</button>`).join('')}</div></div>`
     : '';
   const weightField = cfg.fixedWeight
     ? `<input type="hidden" id="wNum" value="${cfg.fixedWeight}">`
-    : `<div class="form-group"><label id="wLabel">Weight (kg)</label>
-         <div style="display:flex;gap:6px;">
-           <input type="number" id="wNum" min="0.2" max="12" step="0.1" value="${cfg.defaultWeight || 2}" placeholder="e.g. 2" style="flex:1;">
-           <div class="seg" id="unitSeg" style="flex:0 0 auto;">
-             <button type="button" class="active" data-unit="kg" onclick="setUnit('kg')" style="min-width:52px;">kg</button>
-             <button type="button" data-unit="lbs" onclick="setUnit('lbs')" style="min-width:52px;">lbs</button>
-           </div>
-         </div>
-       </div>
+    : `<div class="form-group"><label>Weight (${loc.unit})</label><input type="number" id="wNum" min="${isLb ? 0.5 : 0.2}" max="${isLb ? 26 : 12}" step="0.1" value="${defW}" placeholder="${isLb ? 'e.g. 4' : 'e.g. 2'}"></div>
        <div class="form-group"><label>Oven type</label><select id="ovenType"><option value="fan">Fan / convection</option><option value="conv">Conventional</option></select></div>`;
   const ovenTypeOnly = cfg.fixedWeight
     ? `<div class="form-group full"><label>Oven type</label><select id="ovenType"><option value="fan">Fan / convection</option><option value="conv">Conventional</option></select></div>`
@@ -528,7 +547,7 @@ function calcWidget(cfg) {
       <div class="result-grid" style="margin-bottom:14px;">
         <div class="r-stat"><div class="sv" id="r-range"></div><div class="sl">Guidance range</div></div>
         <div class="r-stat"><div class="sv" id="r-ready"></div><div class="sl">Ready if in now</div></div>
-        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl" id="r-perkg-label">Per kg</div></div>
+        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl">Per ${loc.unit}</div></div>
       </div>
       <div class="therm-notice">🌡️ <strong>Always confirm with a meat thermometer.</strong> Times are guidance — the internal temperature is what makes it safe and perfect.</div>
     </div>
@@ -537,47 +556,25 @@ function calcWidget(cfg) {
   const PAGE = ${JSON.stringify(PAGE)};
   let DONE = PAGE.defaultDoneness;
   const LB_PER_KG = 2.20462;
-  let WEIGHT_UNIT = '${cfg.fixedWeightUnit || 'kg'}';
-  function setUnit(unit){
-    if(unit===WEIGHT_UNIT) return;
-    const input = document.getElementById('wNum');
-    const val = parseFloat(input.value)||0;
-    if(unit==='lbs') input.value = Math.round(val*LB_PER_KG*10)/10;
-    else input.value = Math.round((val/LB_PER_KG)*10)/10;
-    WEIGHT_UNIT = unit;
-    document.querySelectorAll('#unitSeg button').forEach(b=>b.classList.toggle('active', b.dataset.unit===unit));
-    const lbl = document.getElementById('wLabel');
-    if(lbl) lbl.textContent = 'Weight ('+unit+')';
-    input.min = unit==='lbs' ? 0.5 : 0.2;
-    input.max = unit==='lbs' ? 26 : 12;
-    input.placeholder = unit==='lbs' ? 'e.g. 4.5' : 'e.g. 2';
-  }
   function pickDone(b){ document.querySelectorAll('#doneSeg button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); DONE = b.dataset.done; }
   function fmtTime(min){ min=Math.round(min); const h=Math.floor(min/60), m=min%60; if(h===0)return m+' min'; if(m===0)return h+' hr'; return h+' hr '+m+' min'; }
   function calculate(){
     const wRaw = parseFloat(document.getElementById('wNum').value)||0;
-    if(wRaw<=0){ alert('Please enter a weight in '+WEIGHT_UNIT+'.'); return; }
-    const kg = WEIGHT_UNIT==='lbs' ? wRaw/LB_PER_KG : wRaw;
+    if(wRaw<=0){ alert('Please enter a weight in '+PAGE.unit+'.'); return; }
+    const kg = PAGE.unit==='lb' ? wRaw/LB_PER_KG : wRaw;
     const oven = (document.getElementById('ovenType')||{}).value || 'fan';
     const d = PAGE.mode==='doneness' ? PAGE.doneness[DONE] : PAGE.single;
     const mid = d.per500*(kg*2)+d.base;
     const lo = d.range[0]*(kg*2)+d.base, hi = d.range[1]*(kg*2)+d.base;
     const ovenC = oven==='conv' ? PAGE.ovenConvC : PAGE.ovenC;
     const ovenF = Math.round((ovenC*9/5+32)/5)*5;
-    const wLabel = WEIGHT_UNIT==='lbs' ? wRaw+' lbs' : kg+' kg';
     document.getElementById('r-time').textContent = fmtTime(mid);
-    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wLabel+' · '+(oven==='conv'?'conventional':'fan')+' oven';
-    document.getElementById('r-oven').textContent = ovenC+'°C / '+ovenF+'°F';
-    document.getElementById('r-internal').textContent = d.internalC+'°C / '+d.internalF+'°F';
+    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wRaw+' '+PAGE.unit+' · '+(oven==='conv'?'conventional':'fan')+' oven';
+    document.getElementById('r-oven').textContent = PAGE.tempF ? ovenF+'°F / '+ovenC+'°C' : ovenC+'°C / '+ovenF+'°F';
+    document.getElementById('r-internal').textContent = PAGE.tempF ? d.internalF+'°F / '+d.internalC+'°C' : d.internalC+'°C / '+d.internalF+'°F';
     document.getElementById('r-rest').textContent = PAGE.restMin+' min';
     document.getElementById('r-range').textContent = fmtTime(lo)+' – '+fmtTime(hi);
-    if(WEIGHT_UNIT==='lbs'){
-      document.getElementById('r-perkg').textContent = fmtTime((d.per500*2)/LB_PER_KG)+'/lb';
-      document.getElementById('r-perkg-label').textContent = 'Per lb';
-    } else {
-      document.getElementById('r-perkg').textContent = fmtTime(d.per500*2)+'/kg';
-      document.getElementById('r-perkg-label').textContent = 'Per kg';
-    }
+    document.getElementById('r-perkg').textContent = PAGE.unit==='lb' ? fmtTime((d.per500*2)/LB_PER_KG)+'/lb' : fmtTime(d.per500*2)+'/kg';
     const ready = new Date(Date.now()+mid*60000);
     document.getElementById('r-ready').textContent = ready.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     document.getElementById('result').style.display='block';
@@ -587,36 +584,42 @@ function calcWidget(cfg) {
   <\/script>`;
 }
 
-// Methodology / formula block (GEO citability). cfg = resolved cook config + labels.
-function methodBlock(cfg, label) {
+// Methodology / formula block (GEO citability). cfg = resolved cook config + labels. loc = locale.
+function methodBlock(cfg, label, loc) {
+  const unitG = loc.unit === 'lb' ? 'lb' : '500 g';
+  const perU = (per500) => loc.unit === 'lb' ? `${(per500 * 2 / LB_PER_KG).toFixed(0)} min/lb` : `${per500} min per 500 g`;
   const d = cfg.mode === 'doneness' ? cfg.doneness[cfg.defaultDoneness || Object.keys(cfg.doneness)[0]] : cfg.single;
-  const searLine = cfg.sear ? `${cfg.sear.tempC}°C sear for ${cfg.sear.min} min, then ${cfg.ovenC}°C` : `${cfg.ovenC}°C fan`;
+  const searLine = cfg.sear
+    ? (loc.tempF ? `${Math.round((cfg.sear.tempC * 9 / 5 + 32) / 5) * 5}°F sear for ${cfg.sear.min} min, then ${cfg.ovenF}°F` : `${cfg.sear.tempC}°C sear for ${cfg.sear.min} min, then ${cfg.ovenC}°C`)
+    : (loc.tempF ? `${cfg.ovenF}°F` : `${cfg.ovenC}°C fan`);
   const rows = [];
   if (cfg.mode === 'doneness') {
     Object.keys(cfg.doneness).forEach(k => { const x = cfg.doneness[k];
-      rows.push([`${x.label} — min per 500 g`, `${x.per500} min (range ${x.range[0]}–${x.range[1]})`, 'UK roasting guides']);
-      rows.push([`${x.label} — internal temp`, `${x.internalC}°C / ${x.internalF}°F`, 'FSA / thermometer']);
+      rows.push([`${x.label} — time per ${loc.unit}`, `${perU(x.per500)} (range ${x.range[0]}–${x.range[1]}/500 g)`, loc.guideSrc]);
+      rows.push([`${x.label} — internal temp`, tempPair(x.internalC, x.internalF, loc), 'USDA / thermometer']);
     });
   } else {
-    rows.push([`Min per 500 g`, `${cfg.single.per500} min (range ${cfg.single.range[0]}–${cfg.single.range[1]})`, 'UK roasting guides']);
-    rows.push([`Internal target`, `${cfg.single.internalC}°C / ${cfg.single.internalF}°F`, 'FSA / thermometer']);
+    rows.push([`Time per ${loc.unit}`, `${perU(cfg.single.per500)} (range ${cfg.single.range[0]}–${cfg.single.range[1]}/500 g)`, loc.guideSrc]);
+    rows.push([`Internal target`, tempPair(cfg.single.internalC, cfg.single.internalF, loc), 'USDA / thermometer']);
   }
   rows.push(['Base offset', `${d.base} min`, 'Standard']);
   rows.push(['Oven', searLine, 'Method']);
   rows.push(['Resting', `${cfg.restMin} min`, 'Best practice']);
+  const weightExpr = loc.unit === 'lb' ? 'weight_lb × 453.592' : 'weight_g';
+  const tempLine = loc.tempF ? 'derived table from °F' : 'derived table from °C';
   return `
   <h2 class="st">How This Calculator Works — Formula &amp; Method</h2>
   <div class="method">
-    <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard UK roasting guidance · applied deterministically · verify with a thermometer</p>
+    <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard ${loc.region} roasting guidance · applied deterministically · verify with a thermometer</p>
     <table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
       ${rows.map(r => `<tr><td>${esc(r[0])}</td><td class="hl">${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}
     </tbody></table>
     <div class="code">
 <span class="c">— ${esc(label)} cooking time —</span><br>
-<span class="k">total_min</span> = min_per_500g × (weight_g / 500) + base_offset<br>
-<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight_g / 500) + base_offset<br>
+<span class="k">total_min</span> = min_per_500g × (${weightExpr} / 500) + base_offset<br>
+<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight / 500) + base_offset<br>
 <span class="k">conventional_oven</span> = fan_temp + 10–20°C (same time)<br>
-<span class="k">fahrenheit</span> = derived table from °C<br>
+<span class="k">${loc.tempF ? 'celsius' : 'fahrenheit'}</span> = ${tempLine}<br>
 <span class="c">— algorithm —</span><br>
 lookup(meat, cut, doneness) → point_estimate → guidance_range<br>
 → internal_target_temp → <span class="k">verify_with_thermometer()</span>
@@ -625,18 +628,19 @@ lookup(meat, cut, doneness) → point_estimate → guidance_range<br>
   </div>`;
 }
 
-function ctaBlock() {
+function ctaBlock(loc) {
+  const store = loc.amazon;
   return `
   <div class="cta-grid">
     <div class="cta-card">
       <h3>🌡️ Stop guessing — check the real temperature</h3>
       <p>A fast digital meat thermometer is the only way to know your roast is safely and perfectly cooked. Pull it at the exact internal temperature, every time.</p>
-      <a href="https://www.amazon.co.uk/s?k=meat+thermometer&tag=${AMAZON_TAG}" class="cta-btn-white" target="_blank" rel="noopener sponsored">See top meat thermometers →</a>
+      <a href="https://www.${store}/s?k=meat+thermometer&tag=${AMAZON_TAG}" class="cta-btn-white" target="_blank" rel="noopener sponsored">See top meat thermometers →</a>
     </div>
     <div class="cta-card">
       <h3>🍳 Roasting kit that gets results</h3>
-      <p>A heavy roasting tin, a leave-in probe and a sharp carving knife make a real difference to your Sunday roast.</p>
-      <a href="https://www.amazon.co.uk/s?k=roasting+tin+set&tag=${AMAZON_TAG}" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
+      <p>A heavy roasting pan, a leave-in probe and a sharp carving knife make a real difference to your roast.</p>
+      <a href="https://www.${store}/s?k=roasting+pan+set&tag=${AMAZON_TAG}" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
     </div>
   </div>
   <div class="adslot">Advertisement</div>`;
@@ -651,21 +655,23 @@ function faqBlock(faq) {
 function faqJsonLd(faq) {
   return { '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f[0], acceptedAnswer: { '@type': 'Answer', text: f[1].replace(/<[^>]+>/g, '') } })) };
 }
-function howToJsonLd(name) {
+function howToJsonLd(name, loc) {
+  const unitWord = loc.unit === 'lb' ? 'pounds' : 'kilograms';
   return { '@type': 'HowTo', name: `How to calculate ${name} cooking time`, step: [
-    { '@type': 'HowToStep', position: 1, name: 'Enter the weight', text: 'Enter the weight of your joint in kilograms.' },
+    { '@type': 'HowToStep', position: 1, name: 'Enter the weight', text: `Enter the weight of your joint in ${unitWord}.` },
     { '@type': 'HowToStep', position: 2, name: 'Choose doneness and oven', text: 'Select how you like it done and whether your oven is fan or conventional.' },
     { '@type': 'HowToStep', position: 3, name: 'Read the time and temperature', text: 'The calculator shows the total time, oven temperature, internal target temperature and resting time.' },
     { '@type': 'HowToStep', position: 4, name: 'Verify with a thermometer', text: 'Cook to the stated internal temperature, confirmed with a meat thermometer.' },
   ] };
 }
-function webAppJsonLd(name, url) {
-  return { '@type': 'WebApplication', name, url, applicationCategory: 'LifestyleApplication', operatingSystem: 'Any', inLanguage: 'en-GB', offers: { '@type': 'Offer', price: '0', priceCurrency: 'GBP' } };
+function webAppJsonLd(name, url, loc) {
+  return { '@type': 'WebApplication', name, url, applicationCategory: 'LifestyleApplication', operatingSystem: 'Any', inLanguage: loc.lang, offers: { '@type': 'Offer', price: '0', priceCurrency: loc.currency } };
 }
 
-function pageShell({ title, desc, keywords, canonical, jsonld, body }) {
+function pageShell({ title, desc, keywords, canonical, jsonld, body, loc }) {
+  const L = loc || LOCALES.uk;
   return `<!DOCTYPE html>
-<html lang="en-GB">
+<html lang="${L.lang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -690,33 +696,30 @@ ${body}
 </html>`;
 }
 
-function footerBlock(links) {
+function footerBlock(links, loc) {
+  const L = loc || LOCALES.uk;
   return `<footer><div class="container">
-    <div class="disc">Cooking times are guidance compiled from standard UK roasting guides and applied deterministically — not a food-safety authority. Always cook meat to a safe internal temperature, checked with a meat thermometer.</div>
+    <div class="disc">Cooking times are guidance compiled from standard ${L.region} roasting guides and applied deterministically — not a food-safety authority. Always cook meat to a safe internal temperature, checked with a meat thermometer.</div>
     <p>${links}</p>
   </div></footer>`;
 }
 
-// link grids
-function hubLinks(exceptKey) {
+// link grids — all prefixed by locale (UK = root, US = /us/)
+function hubLinks(exceptKey, loc) {
   return HUBS.filter(h => h.key !== exceptKey).map(h => {
     const m = MEATS[h.key];
-    return `<a class="link-card" href="/${m.slug}/">${m.emoji} ${esc(m.label)}<div class="sub">Cooking time calculator</div></a>`;
+    return `<a class="link-card" href="/${loc.prefix}${m.slug}/">${m.emoji} ${esc(m.label)}<div class="sub">Cooking time calculator</div></a>`;
   }).join('');
 }
-function cutLinksFor(meatKey) {
+function cutLinksFor(meatKey, loc) {
   return CUTS.filter(c => c.meat === meatKey).map(c =>
-    `<a class="link-card" href="/${c.slug}/">${esc(c.cut)}<div class="sub">${esc(c.kw.split(',')[0])}</div></a>`).join('');
+    `<a class="link-card" href="/${loc.prefix}${c.slug}/">${esc(c.cut)}<div class="sub">${esc(c.kw.split(',')[0])}</div></a>`).join('');
 }
-function weightLinksFor(meatKey, slug, current) {
-  return (WEIGHT_STEPS[meatKey] || []).map(w =>
-    `<a class="link-card" href="/${slug}/${wSlug(w)}/"${w === current ? ' style="border-color:var(--brand)"' : ''}>${w} kg<div class="sub">cooking time</div></a>`).join('');
+function weightLinksFor(meatKey, slug, loc, current) {
+  return (loc.steps[meatKey] || []).map(w =>
+    `<a class="link-card" href="/${loc.prefix}${slug}/${wSlug(w, loc)}/"${w === current ? ' style="border-color:var(--brand)"' : ''}>${w} ${loc.unit}<div class="sub">cooking time</div></a>`).join('');
 }
-function wSlug(w) { return String(w).replace('.', '-') + 'kg'; }
-function lbWeightLinksFor(meatKey, current) {
-  return (LB_STEPS[meatKey] || []).map(lb =>
-    `<a class="link-card" href="/us/${meatKey}-${lb}lb/"${lb === current ? ' style="border-color:var(--brand)"' : ''}>${lb} lb<div class="sub">cooking time</div></a>`).join('');
-}
+function wSlug(w, loc) { return String(w).replace('.', '-') + (loc.unit === 'lb' ? 'lb' : 'kg'); }
 
 // ═════════════════════════════════════════════════════════════
 // EMITTERS
@@ -732,215 +735,299 @@ function emit(relDir, html) {
   count++;
 }
 
-// ── Tier 1: hubs ──
-HUBS.forEach(hub => {
-  const m = MEATS[hub.key];
-  const cfg = { mode: m.mode, doneness: m.doneness, single: m.single, ovenC: m.ovenC, ovenConvC: m.ovenConvC, ovenF: m.ovenF, restMin: m.restMin, defaultDoneness: m.defaultDoneness, sear: m.sear, defaultWeight: 2 };
-  const canonical = `${SITE_URL}/${m.slug}/`;
-  // chart table by weight
-  const chartW = WEIGHT_STEPS[hub.key];
-  const chartHead = m.mode === 'doneness'
-    ? ['Weight', ...Object.keys(m.doneness).map(k => m.doneness[k].label)]
-    : ['Weight', 'Cooking time', 'Internal temp'];
-  const chartRows = chartW.map(w => m.mode === 'doneness'
-    ? `<tr><td class="hl">${w} kg</td>${Object.keys(m.doneness).map(k => `<td>${fmtTime(total(m.doneness[k].per500, m.doneness[k].base, w))}</td>`).join('')}</tr>`
-    : `<tr><td class="hl">${w} kg</td><td>${fmtTime(total(m.single.per500, m.single.base, w))}</td><td>${m.single.internalC}°C</td></tr>`).join('');
-  const faq = [
-    [`How long to cook ${hub.key === 'chicken' ? 'a chicken' : hub.key === 'beef' ? 'roast beef' : hub.key === 'lamb' ? 'a leg of lamb' : 'roast pork'} per kg?`,
-      m.mode === 'doneness'
-        ? `About ${m.doneness.medium.per500 * 2} minutes per kg for medium (${m.doneness.rare.per500 * 2}/kg rare, ${m.doneness.well.per500 * 2}/kg well done), plus a base of ${m.doneness.medium.base} minutes, in a fan oven at ${m.ovenC}°C.`
-        : `About ${m.single.per500 * 2} minutes per kg plus ${m.single.base} minutes, at ${m.ovenC}°C fan, to an internal temperature of ${m.single.internalC}°C.`],
-    [`What temperature should ${m.label.toLowerCase()} be cooked to inside?`,
-      m.mode === 'doneness'
-        ? `${m.label} internal temperatures: ${Object.keys(m.doneness).map(k => `${m.doneness[k].label} ${m.doneness[k].internalC}°C`).join(', ')}. Measure with a meat thermometer.`
-        : `${m.label} should reach an internal temperature of <strong>${m.single.internalC}°C</strong> (${m.single.internalF}°F). ${m.note}`],
-    [`Does a fan oven cook ${m.label.toLowerCase()} faster?`,
-      `Yes. A fan oven runs about 20°C hotter than conventional — use ${m.ovenC}°C fan (${m.ovenConvC}°C conventional) for the times shown. ${m.note}`],
-  ];
-  const jsonld = [webAppJsonLd(hub.title, canonical), faqJsonLd(faq), howToJsonLd(m.label),
-    { '@type': 'BreadcrumbList', itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
-      { '@type': 'ListItem', position: 2, name: hub.h1, item: canonical }] }];
-  const body = `
+// ═════════════════════════════════════════════════════════════
+// buildLocale(loc) — emits Tier 1 (hubs), Tier 3 (weight pages) and Tier 2
+// (cuts) for one locale. UK renders kg/°C at root; US renders lb/°F under /us/.
+// ═════════════════════════════════════════════════════════════
+function buildLocale(loc) {
+  const homeHref = `/${loc.prefix}`;
+  const regBadge = loc.tempF ? '°F · US' : '°C · UK';
+
+  // ── Tier 1: hubs ──
+  HUBS.forEach(hub => {
+    const m = MEATS[hub.key];
+    const cfg = { mode: m.mode, doneness: m.doneness, single: m.single, ovenC: m.ovenC, ovenConvC: m.ovenConvC, ovenF: m.ovenF, restMin: m.restMin, defaultDoneness: m.defaultDoneness, sear: m.sear, defaultWeight: loc.unit === 'lb' ? 4 : 2 };
+    const canonical = `${SITE_URL}/${loc.prefix}${m.slug}/`;
+    const chartW = loc.steps[hub.key];
+    const chartHead = m.mode === 'doneness'
+      ? ['Weight', ...Object.keys(m.doneness).map(k => m.doneness[k].label)]
+      : ['Weight', 'Cooking time', 'Internal temp'];
+    const chartRows = chartW.map(w => m.mode === 'doneness'
+      ? `<tr><td class="hl">${w} ${loc.unit}</td>${Object.keys(m.doneness).map(k => `<td>${fmtTime(total(m.doneness[k].per500, m.doneness[k].base, toKg(w, loc)))}</td>`).join('')}</tr>`
+      : `<tr><td class="hl">${w} ${loc.unit}</td><td>${fmtTime(total(m.single.per500, m.single.base, toKg(w, loc)))}</td><td>${internalPrimary(m.single.internalC, m.single.internalF, loc)}</td></tr>`).join('');
+    const faq = [
+      [`How long to cook ${hub.key === 'chicken' ? 'a chicken' : hub.key === 'beef' ? 'roast beef' : hub.key === 'lamb' ? 'a leg of lamb' : 'roast pork'} per ${loc.unit}?`,
+        m.mode === 'doneness'
+          ? `About ${unitMin(m.doneness.medium.per500, loc)} minutes per ${loc.unit} for medium (${unitMin(m.doneness.rare.per500, loc)}/${loc.unit} rare, ${unitMin(m.doneness.well.per500, loc)}/${loc.unit} well done), plus a base of ${m.doneness.medium.base} minutes, at ${ovenPrimary(m, loc)}.`
+          : `About ${unitMin(m.single.per500, loc)} minutes per ${loc.unit} plus ${m.single.base} minutes, at ${ovenPrimary(m, loc)}, to an internal temperature of ${internalPrimary(m.single.internalC, m.single.internalF, loc)}.`],
+      [`What temperature should ${m.label.toLowerCase()} be cooked to inside?`,
+        m.mode === 'doneness'
+          ? `${m.label} internal temperatures: ${Object.keys(m.doneness).map(k => `${m.doneness[k].label} ${internalPrimary(m.doneness[k].internalC, m.doneness[k].internalF, loc)}`).join(', ')}. Measure with a meat thermometer.`
+          : `${m.label} should reach an internal temperature of <strong>${internalPrimary(m.single.internalC, m.single.internalF, loc)}</strong> (${tempPair(m.single.internalC, m.single.internalF, loc)}). ${m.note}`],
+      [`Does a fan oven cook ${m.label.toLowerCase()} faster?`,
+        `Yes. A fan (convection) oven runs about 20°C / 35°F hotter than conventional — use ${tempPair(m.ovenC, m.ovenF, loc)} for the times shown. ${m.note}`],
+    ];
+    const jsonld = [webAppJsonLd(hub.title, canonical, loc), faqJsonLd(faq), howToJsonLd(m.label, loc),
+      { '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + homeHref },
+        { '@type': 'ListItem', position: 2, name: hub.h1, item: canonical }] }];
+    const otherVersion = loc.id === 'uk'
+      ? `<p style="margin-top:24px;"><a href="/us/${m.slug}/" class="back-link">🇺🇸 Cooking in pounds &amp; °F? Use the US ${esc(m.label.toLowerCase())} calculator →</a></p>`
+      : `<p style="margin-top:24px;"><a href="/${m.slug}/" class="back-link">🇬🇧 Cooking in kg &amp; °C? Use the UK ${esc(m.label.toLowerCase())} calculator →</a></p>`;
+    const body = `
 <header><div class="container">
-  <div class="badge">${m.emoji} ${esc(m.label)} · °C &amp; °F · UK &amp; US</div>
+  <div class="badge">${m.emoji} ${esc(m.label)} · ${regBadge}</div>
   <h1>${esc(hub.h1)}</h1>
   <p>${esc(hub.intro)}</p>
 </div></header>
 <div class="container">
-<div class="tool-wrapper">${calcWidget(cfg)}</div>
+<div class="tool-wrapper">${calcWidget(cfg, loc)}</div>
 <div class="content">
-  <a href="/" class="back-link">← All meat calculators</a>
+  <a href="${homeHref}" class="back-link">← All meat calculators</a>
   <h2 class="st">${esc(m.label)} Cooking Time Chart (by weight)</h2>
   <p>${m.note}</p>
   <table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${chartRows}</tbody></table>
   <h2 class="st">${esc(m.label)} Cooking Times by Weight</h2>
   <p>Jump to a pre-filled calculator for your exact joint size:</p>
-  <div class="link-grid">${weightLinksFor(hub.key, m.slug)}</div>
-  <h2 class="st">🇺🇸 ${esc(m.label)} Cooking Times by Pound (US)</h2>
-  <p>US recipes and °F ovens? Jump to a pre-filled calculator by pound:</p>
-  <div class="link-grid">${lbWeightLinksFor(hub.key)}</div>
-  ${cutLinksFor(hub.key) ? `<h2 class="st">${esc(m.label)} Cuts</h2><div class="link-grid">${cutLinksFor(hub.key)}</div>` : ''}
-  ${ctaBlock()}
-  ${methodBlock(cfg, m.label)}
+  <div class="link-grid">${weightLinksFor(hub.key, m.slug, loc)}</div>
+  ${cutLinksFor(hub.key, loc) ? `<h2 class="st">${esc(m.label)} Cuts</h2><div class="link-grid">${cutLinksFor(hub.key, loc)}</div>` : ''}
+  ${ctaBlock(loc)}
+  ${methodBlock(cfg, m.label, loc)}
   ${faqBlock(faq)}
+  ${otherVersion}
   <h2 class="st">Other Meat Calculators</h2>
-  <div class="link-grid">${hubLinks(hub.key)}</div>
+  <div class="link-grid">${hubLinks(hub.key, loc)}</div>
 </div></div>
-${footerBlock(`${esc(m.label)} cooking time calculator · <a href="/">Home</a> · Guidance only — verify with a thermometer`)}`;
-  emit(m.slug, pageShell({ title: `${hub.title} — Time by Weight & Doneness`, desc: `${hub.intro} Times in °C and °F, fan or conventional oven.`, keywords: hub.keywords, canonical, jsonld, body }));
+${footerBlock(`${esc(m.label)} cooking time calculator · <a href="${homeHref}">Home</a> · Guidance only — verify with a thermometer`, loc)}`;
+    emit(`${loc.prefix}${m.slug}`, pageShell({ title: `${hub.title} — Time by Weight & Doneness`, desc: `${hub.intro} Times in ${loc.tempF ? '°F and °C' : '°C and °F'}, fan or conventional oven.`, keywords: hub.keywords, canonical, jsonld, body, loc }));
 
-  // ── Tier 3: weight pages for this hub ──
-  (WEIGHT_STEPS[hub.key] || []).forEach(w => {
-    const wcfg = Object.assign({}, cfg, { fixedWeight: w });
-    const wcanon = `${SITE_URL}/${m.slug}/${wSlug(w)}/`;
-    const dish = m.dishLabel;
-    const Dish = dish.charAt(0).toUpperCase() + dish.slice(1);
-    const wtimeMain = m.mode === 'doneness' ? fmtTime(total(m.doneness.medium.per500, m.doneness.medium.base, w)) : fmtTime(total(m.single.per500, m.single.base, w));
-    const wtitle = `How Long to Cook a ${w}kg ${Dish} — Cooking Time`;
-    const wdesc = `A ${w} kg ${dish} takes about ${wtimeMain}${m.mode === 'doneness' ? ' for medium' : ''} at ${m.ovenC}°C fan. Exact time, temperature and resting time.`;
-    const wfaq = [
-      [`How long to cook a ${w}kg ${dish}?`,
-        m.mode === 'doneness'
-          ? `A ${w} kg ${dish} takes about <strong>${fmtTime(total(m.doneness.medium.per500, m.doneness.medium.base, w))}</strong> for medium (${fmtTime(total(m.doneness.rare.per500, m.doneness.rare.base, w))} rare, ${fmtTime(total(m.doneness.well.per500, m.doneness.well.base, w))} well done) at ${m.ovenC}°C fan.`
-          : `A ${w} kg ${dish} takes about <strong>${wtimeMain}</strong> at ${m.ovenC}°C fan, to an internal temperature of ${m.single.internalC}°C.`],
-      [`What temperature for a ${w}kg ${dish}?`, `Roast at ${m.ovenC}°C fan (${m.ovenConvC}°C conventional / ${m.ovenF}°F). ${m.note}`],
-    ];
-    const wjson = [webAppJsonLd(wtitle, wcanon), faqJsonLd(wfaq),
-      { '@type': 'BreadcrumbList', itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
-        { '@type': 'ListItem', position: 2, name: hub.h1, item: canonical },
-        { '@type': 'ListItem', position: 3, name: `${w} kg`, item: wcanon }] }];
-    const wbody = `
+    // ── Tier 3: weight pages for this hub ──
+    (loc.steps[hub.key] || []).forEach(w => {
+      const kg = toKg(w, loc);
+      const wcfg = Object.assign({}, cfg, { fixedWeight: w });
+      const wcanon = `${SITE_URL}/${loc.prefix}${m.slug}/${wSlug(w, loc)}/`;
+      const dish = m.dishLabel;
+      const Dish = dish.charAt(0).toUpperCase() + dish.slice(1);
+      const wtimeMain = m.mode === 'doneness' ? fmtTime(total(m.doneness.medium.per500, m.doneness.medium.base, kg)) : fmtTime(total(m.single.per500, m.single.base, kg));
+      const wtitle = `How Long to Cook a ${w}${loc.unit} ${Dish} — Cooking Time`;
+      const wdesc = `A ${w} ${loc.unit} ${dish} takes about ${wtimeMain}${m.mode === 'doneness' ? ' for medium' : ''} at ${ovenPrimary(m, loc)}. Exact time, temperature and resting time.`;
+      const wfaq = [
+        [`How long to cook a ${w}${loc.unit} ${dish}?`,
+          m.mode === 'doneness'
+            ? `A ${w} ${loc.unit} ${dish} takes about <strong>${fmtTime(total(m.doneness.medium.per500, m.doneness.medium.base, kg))}</strong> for medium (${fmtTime(total(m.doneness.rare.per500, m.doneness.rare.base, kg))} rare, ${fmtTime(total(m.doneness.well.per500, m.doneness.well.base, kg))} well done) at ${ovenPrimary(m, loc)}.`
+            : `A ${w} ${loc.unit} ${dish} takes about <strong>${wtimeMain}</strong> at ${ovenPrimary(m, loc)}, to an internal temperature of ${internalPrimary(m.single.internalC, m.single.internalF, loc)}.`],
+        [`What temperature for a ${w}${loc.unit} ${dish}?`, `Roast at ${tempPair(m.ovenC, m.ovenF, loc)}. ${m.note}`],
+      ];
+      const wjson = [webAppJsonLd(wtitle, wcanon, loc), faqJsonLd(wfaq),
+        { '@type': 'BreadcrumbList', itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + homeHref },
+          { '@type': 'ListItem', position: 2, name: hub.h1, item: canonical },
+          { '@type': 'ListItem', position: 3, name: `${w} ${loc.unit}`, item: wcanon }] }];
+      const wbody = `
 <header><div class="container">
-  <div class="badge">${m.emoji} ${w} kg ${esc(Dish)}</div>
-  <h1>How Long to Cook a ${w}kg ${esc(Dish)}?</h1>
-  <p>A ${w} kg ${esc(dish)} takes about <strong>${wtimeMain}</strong>${m.mode === 'doneness' ? ' for medium' : ''}. Adjust oven type${m.mode === 'doneness' ? ' and doneness' : ''} below.</p>
+  <div class="badge">${m.emoji} ${w} ${loc.unit} ${esc(Dish)}</div>
+  <h1>How Long to Cook a ${w}${loc.unit} ${esc(Dish)}?</h1>
+  <p>A ${w} ${loc.unit} ${esc(dish)} takes about <strong>${wtimeMain}</strong>${m.mode === 'doneness' ? ' for medium' : ''}. Adjust oven type${m.mode === 'doneness' ? ' and doneness' : ''} below.</p>
 </div></header>
 <div class="container">
-<div class="tool-wrapper">${calcWidget(wcfg)}</div>
+<div class="tool-wrapper">${calcWidget(wcfg, loc)}</div>
 <div class="content">
-  <a href="/${m.slug}/" class="back-link">← ${esc(m.label)} calculator</a>
-  <h2 class="st">Cooking Times for a ${w}kg ${esc(Dish)}</h2>
+  <a href="/${loc.prefix}${m.slug}/" class="back-link">← ${esc(m.label)} calculator</a>
+  <h2 class="st">Cooking Times for a ${w}${loc.unit} ${esc(Dish)}</h2>
   <table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>
   ${m.mode === 'doneness'
-        ? `<tr><td class="hl">${w} kg</td>${Object.keys(m.doneness).map(k => `<td>${fmtTime(total(m.doneness[k].per500, m.doneness[k].base, w))}</td>`).join('')}</tr>`
-        : `<tr><td class="hl">${w} kg</td><td>${wtimeMain}</td><td>${m.single.internalC}°C</td></tr>`}
+          ? `<tr><td class="hl">${w} ${loc.unit}</td>${Object.keys(m.doneness).map(k => `<td>${fmtTime(total(m.doneness[k].per500, m.doneness[k].base, kg))}</td>`).join('')}</tr>`
+          : `<tr><td class="hl">${w} ${loc.unit}</td><td>${wtimeMain}</td><td>${internalPrimary(m.single.internalC, m.single.internalF, loc)}</td></tr>`}
   </tbody></table>
-  ${ctaBlock()}
+  ${ctaBlock(loc)}
   <h2 class="st">Other Weights</h2>
-  <div class="link-grid">${weightLinksFor(hub.key, m.slug, w)}</div>
-  ${methodBlock(cfg, m.label)}
+  <div class="link-grid">${weightLinksFor(hub.key, m.slug, loc, w)}</div>
+  ${methodBlock(cfg, m.label, loc)}
   ${faqBlock(wfaq)}
 </div></div>
-${footerBlock(`${w} kg ${esc(m.label)} · <a href="/${m.slug}/">${esc(m.label)} calculator</a> · <a href="/">Home</a>`)}`;
-    emit(`${m.slug}/${wSlug(w)}`, pageShell({ title: wtitle, desc: wdesc, keywords: `how long to cook a ${w}kg ${dish}, ${w}kg ${dish} cooking time, ${w} kg ${dish} roasting time`, canonical: wcanon, jsonld: wjson, body: wbody }));
+${footerBlock(`${w} ${loc.unit} ${esc(m.label)} · <a href="/${loc.prefix}${m.slug}/">${esc(m.label)} calculator</a> · <a href="${homeHref}">Home</a>`, loc)}`;
+      emit(`${loc.prefix}${m.slug}/${wSlug(w, loc)}`, pageShell({ title: wtitle, desc: wdesc, keywords: `how long to cook a ${w}${loc.unit} ${dish}, ${w}${loc.unit} ${dish} cooking time, ${w} ${loc.unit} ${dish} roasting time`, canonical: wcanon, jsonld: wjson, body: wbody, loc }));
+    });
   });
 
-  // ── Tier 3-US: pound-based weight pages for this hub ──
-  (LB_STEPS[hub.key] || []).forEach(lb => {
-    const kgEquiv = Math.round((lb / 2.20462) * 100) / 100;
-    const lcfg = Object.assign({}, cfg, { fixedWeight: lb, fixedWeightUnit: 'lbs' });
-    const lcanon = `${SITE_URL}/us/${hub.key}-${lb}lb/`;
-    const dish = m.dishLabel;
-    const Dish = dish.charAt(0).toUpperCase() + dish.slice(1);
-    const ltimeMain = m.mode === 'doneness' ? fmtTime(total(m.doneness.medium.per500, m.doneness.medium.base, kgEquiv)) : fmtTime(total(m.single.per500, m.single.base, kgEquiv));
-    const ltitle = `How Long to Cook a ${lb} lb ${Dish} — Cooking Time (US)`;
-    const ldesc = `A ${lb} lb ${dish} takes about ${ltimeMain}${m.mode === 'doneness' ? ' for medium' : ''} at ${m.ovenF}°F. Exact time, temperature (°F) and resting time for the US market.`;
-    const lfaq = [
-      [`How long to cook a ${lb} lb ${dish}?`,
-        m.mode === 'doneness'
-          ? `A ${lb} lb ${dish} takes about <strong>${fmtTime(total(m.doneness.medium.per500, m.doneness.medium.base, kgEquiv))}</strong> for medium (${fmtTime(total(m.doneness.rare.per500, m.doneness.rare.base, kgEquiv))} rare, ${fmtTime(total(m.doneness.well.per500, m.doneness.well.base, kgEquiv))} well done) at ${m.ovenF}°F.`
-          : `A ${lb} lb ${dish} takes about <strong>${ltimeMain}</strong> at ${m.ovenF}°F, to an internal temperature of ${m.single.internalF}°F.`],
-      [`What oven temperature for a ${lb} lb ${dish}?`, `Roast at ${m.ovenF}°F (${m.ovenC}°C fan / ${m.ovenConvC}°C conventional). ${m.note}`],
+  // ── Tier 2: cut pages ──
+  CUTS.forEach(entry => {
+    const m = MEATS[entry.meat];
+    const cook = cookOf(entry);
+    // weight steps for this cut in the locale unit
+    const wsteps = loc.unit === 'lb'
+      ? (entry.weights ? entry.weights.map(kg => Math.round(kg * LB_PER_KG * 2) / 2) : (LB_STEPS[entry.meat] || [3, 4, 5, 6]))
+      : (entry.weights || WEIGHT_STEPS[entry.meat] || [1, 1.5, 2, 2.5]);
+    const cfg = { mode: cook.mode, doneness: cook.doneness, single: cook.single, ovenC: cook.ovenC, ovenConvC: cook.ovenConvC, ovenF: cook.ovenF, restMin: cook.restMin, defaultDoneness: cook.defaultDoneness, sear: cook.sear, defaultWeight: wsteps[Math.floor(wsteps.length / 2)] };
+    const canonical = `${SITE_URL}/${loc.prefix}${entry.slug}/`;
+    const title = entry.cut + ' Cooking Time Calculator';
+    const chartHead = cook.mode === 'doneness' ? ['Weight', ...Object.keys(cook.doneness).map(k => cook.doneness[k].label)] : ['Weight', 'Cooking time', 'Internal temp'];
+    const chartRows = wsteps.map(w => cook.mode === 'doneness'
+      ? `<tr><td class="hl">${w} ${loc.unit}</td>${Object.keys(cook.doneness).map(k => `<td>${fmtTime(total(cook.doneness[k].per500, cook.doneness[k].base, toKg(w, loc)))}</td>`).join('')}</tr>`
+      : `<tr><td class="hl">${w} ${loc.unit}</td><td>${fmtTime(total(cook.single.per500, cook.single.base, toKg(w, loc)))}</td><td>${internalPrimary(cook.single.internalC, cook.single.internalF, loc)}</td></tr>`).join('');
+    const d0 = cook.mode === 'doneness' ? cook.doneness[cook.defaultDoneness || Object.keys(cook.doneness)[0]] : cook.single;
+    const faq = [
+      [`How long to cook ${entry.cut.toLowerCase()}?`,
+        cook.mode === 'doneness'
+          ? `Roughly ${cook.doneness.medium ? unitMin(cook.doneness.medium.per500, loc) : unitMin(d0.per500, loc)} minutes per ${loc.unit} plus a base offset. ${entry.note}`
+          : `About ${unitMin(cook.single.per500, loc)} minutes per ${loc.unit} plus ${cook.single.base} minutes at ${loc.tempF ? cook.ovenF + '°F' : cook.ovenC + '°C fan'}, to ${internalPrimary(cook.single.internalC, cook.single.internalF, loc)} internal. ${entry.note}`],
+      [`What oven temperature for ${entry.cut.toLowerCase()}?`, `Cook at ${tempPair(cook.ovenC, cook.ovenF, loc)}. Internal target ${internalPrimary(d0.internalC, d0.internalF, loc)}. Rest ${cook.restMin} minutes.`],
     ];
-    const ljson = [webAppJsonLd(ltitle, lcanon), faqJsonLd(lfaq),
+    const jsonld = [webAppJsonLd(title, canonical, loc), faqJsonLd(faq), howToJsonLd(entry.cut, loc),
       { '@type': 'BreadcrumbList', itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
-        { '@type': 'ListItem', position: 2, name: hub.h1, item: canonical },
-        { '@type': 'ListItem', position: 3, name: `${lb} lb`, item: lcanon }] }];
-    const lchartHead = m.mode === 'doneness'
-      ? ['Weight', ...Object.keys(m.doneness).map(k => m.doneness[k].label)]
-      : ['Weight', 'Cooking time', 'Internal temp'];
-    const lbody = `
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + homeHref },
+        { '@type': 'ListItem', position: 2, name: MEATS[entry.meat].label, item: `${SITE_URL}/${loc.prefix}${MEATS[entry.meat].slug}/` },
+        { '@type': 'ListItem', position: 3, name: entry.cut, item: canonical }] }];
+    const body = `
 <header><div class="container">
-  <div class="badge">${m.emoji} ${lb} lb ${esc(Dish)} · US</div>
-  <h1>How Long to Cook a ${lb} lb ${esc(Dish)}?</h1>
-  <p>A ${lb} lb ${esc(dish)} takes about <strong>${ltimeMain}</strong>${m.mode === 'doneness' ? ' for medium' : ''}. Adjust oven type${m.mode === 'doneness' ? ' and doneness' : ''} below.</p>
-</div></header>
-<div class="container">
-<div class="tool-wrapper">${calcWidget(lcfg)}</div>
-<div class="content">
-  <a href="/${m.slug}/" class="back-link">← ${esc(m.label)} calculator</a>
-  <h2 class="st">Cooking Times for a ${lb} lb ${esc(Dish)}</h2>
-  <table class="data-table"><thead><tr>${lchartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>
-  ${m.mode === 'doneness'
-        ? `<tr><td class="hl">${lb} lb</td>${Object.keys(m.doneness).map(k => `<td>${fmtTime(total(m.doneness[k].per500, m.doneness[k].base, kgEquiv))}</td>`).join('')}</tr>`
-        : `<tr><td class="hl">${lb} lb</td><td>${ltimeMain}</td><td>${m.single.internalF}°F</td></tr>`}
-  </tbody></table>
-  ${ctaBlock()}
-  <h2 class="st">Other Weights (lb)</h2>
-  <div class="link-grid">${lbWeightLinksFor(hub.key, lb)}</div>
-  ${methodBlock(cfg, m.label)}
-  ${faqBlock(lfaq)}
-</div></div>
-${footerBlock(`${lb} lb ${esc(m.label)} · <a href="/${m.slug}/">${esc(m.label)} calculator</a> · <a href="/">Home</a>`)}`;
-    emit(`us/${hub.key}-${lb}lb`, pageShell({ title: ltitle, desc: ldesc, keywords: `how long to cook a ${lb} lb ${dish}, ${lb} lb ${dish} cooking time, ${lb} pound ${dish} cooking time`, canonical: lcanon, jsonld: ljson, body: lbody }));
-  });
-});
-
-// ── Tier 2: cut pages ──
-CUTS.forEach(entry => {
-  const m = MEATS[entry.meat];
-  const cook = cookOf(entry);
-  const cfg = { mode: cook.mode, doneness: cook.doneness, single: cook.single, ovenC: cook.ovenC, ovenConvC: cook.ovenConvC, ovenF: cook.ovenF, restMin: cook.restMin, defaultDoneness: cook.defaultDoneness, sear: cook.sear, defaultWeight: (entry.weights ? entry.weights[Math.floor(entry.weights.length / 2)] : 2) };
-  const canonical = `${SITE_URL}/${entry.slug}/`;
-  const kwMain = entry.kw.split(',')[0].trim();
-  const title = entry.cut + ' Cooking Time Calculator';
-  const wsteps = entry.weights || WEIGHT_STEPS[entry.meat] || [1, 1.5, 2, 2.5];
-  const chartHead = cook.mode === 'doneness' ? ['Weight', ...Object.keys(cook.doneness).map(k => cook.doneness[k].label)] : ['Weight', 'Cooking time', 'Internal temp'];
-  const chartRows = wsteps.map(w => cook.mode === 'doneness'
-    ? `<tr><td class="hl">${w} kg</td>${Object.keys(cook.doneness).map(k => `<td>${fmtTime(total(cook.doneness[k].per500, cook.doneness[k].base, w))}</td>`).join('')}</tr>`
-    : `<tr><td class="hl">${w} kg</td><td>${fmtTime(total(cook.single.per500, cook.single.base, w))}</td><td>${cook.single.internalC}°C</td></tr>`).join('');
-  const d0 = cook.mode === 'doneness' ? cook.doneness[cook.defaultDoneness || Object.keys(cook.doneness)[0]] : cook.single;
-  const faq = [
-    [`How long to cook ${entry.cut.toLowerCase()}?`,
-      cook.mode === 'doneness'
-        ? `Roughly ${cook.doneness.medium ? cook.doneness.medium.per500 * 2 : d0.per500 * 2} minutes per kg plus a base offset. ${entry.note}`
-        : `About ${cook.single.per500 * 2} minutes per kg plus ${cook.single.base} minutes at ${cook.ovenC}°C, to ${cook.single.internalC}°C internal. ${entry.note}`],
-    [`What oven temperature for ${entry.cut.toLowerCase()}?`, `Cook at ${cook.ovenC}°C fan (${cook.ovenConvC}°C conventional / ${cook.ovenF}°F). Internal target ${d0.internalC}°C. Rest ${cook.restMin} minutes.`],
-  ];
-  const jsonld = [webAppJsonLd(title, canonical), faqJsonLd(faq), howToJsonLd(entry.cut),
-    { '@type': 'BreadcrumbList', itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
-      { '@type': 'ListItem', position: 2, name: MEATS[entry.meat].label, item: `${SITE_URL}/${MEATS[entry.meat].slug}/` },
-      { '@type': 'ListItem', position: 3, name: entry.cut, item: canonical }] }];
-  const body = `
-<header><div class="container">
-  <div class="badge">${m.emoji} ${esc(entry.cut)}</div>
+  <div class="badge">${m.emoji} ${esc(entry.cut)} · ${regBadge}</div>
   <h1>${esc(title)}</h1>
   <p>${esc(entry.note)}</p>
 </div></header>
 <div class="container">
-<div class="tool-wrapper">${calcWidget(cfg)}</div>
+<div class="tool-wrapper">${calcWidget(cfg, loc)}</div>
 <div class="content">
-  <a href="/${MEATS[entry.meat].slug}/" class="back-link">← ${esc(MEATS[entry.meat].label)} calculator</a>
+  <a href="/${loc.prefix}${MEATS[entry.meat].slug}/" class="back-link">← ${esc(MEATS[entry.meat].label)} calculator</a>
   <h2 class="st">${esc(entry.cut)} Cooking Time Chart</h2>
   <table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${chartRows}</tbody></table>
-  ${ctaBlock()}
-  ${methodBlock(cfg, entry.cut)}
+  ${ctaBlock(loc)}
+  ${methodBlock(cfg, entry.cut, loc)}
   ${faqBlock(faq)}
   <h2 class="st">More ${esc(MEATS[entry.meat].label)} Cuts</h2>
-  <div class="link-grid">${cutLinksFor(entry.meat)}</div>
+  <div class="link-grid">${cutLinksFor(entry.meat, loc)}</div>
   <h2 class="st">Other Meat Calculators</h2>
-  <div class="link-grid">${hubLinks(entry.meat)}</div>
+  <div class="link-grid">${hubLinks(entry.meat, loc)}</div>
 </div></div>
-${footerBlock(`${esc(entry.cut)} cooking time · <a href="/${MEATS[entry.meat].slug}/">${esc(MEATS[entry.meat].label)} calculator</a> · <a href="/">Home</a>`)}`;
-  emit(entry.slug, pageShell({ title: `${title} — Time, Temperature & Method`, desc: `${entry.note} Enter the weight for the exact cooking time, oven temperature and internal target.`, keywords: entry.kw, canonical, jsonld, body }));
-});
+${footerBlock(`${esc(entry.cut)} cooking time · <a href="/${loc.prefix}${MEATS[entry.meat].slug}/">${esc(MEATS[entry.meat].label)} calculator</a> · <a href="${homeHref}">Home</a>`, loc)}`;
+    emit(`${loc.prefix}${entry.slug}`, pageShell({ title: `${title} — Time, Temperature & Method`, desc: `${entry.note} Enter the weight for the exact cooking time, oven temperature and internal target.`, keywords: entry.kw, canonical, jsonld, body, loc }));
+  });
+}
 
-// ── Tier 4: informational pages ──
+buildLocale(LOCALES.uk);
+buildLocale(LOCALES.us);
+
+// ═════════════════════════════════════════════════════════════
+// US HOMEPAGE — generated mirror of the hand-written UK homepage (lb/°F).
+// (UK homepage index.html is hand-written and lives at the repo root.)
+// ═════════════════════════════════════════════════════════════
+function buildHomepage(loc) {
+  const model = {};
+  Object.keys(MEATS).forEach(k => { const m = MEATS[k];
+    model[k] = { label: m.label, mode: m.mode, ovenC: m.ovenC, ovenConvC: m.ovenConvC, ovenF: m.ovenF, restMin: m.restMin };
+    if (m.mode === 'doneness') { model[k].doneness = {}; Object.keys(m.doneness).forEach(d => { const x = m.doneness[d]; model[k].doneness[d] = { label: x.label, per500: x.per500, base: x.base, range: x.range, internalC: x.internalC, internalF: x.internalF }; }); model[k].defaultDoneness = m.defaultDoneness; }
+    else { const s = m.single; model[k].single = { label: s.label, per500: s.per500, base: s.base, range: s.range, internalC: s.internalC, internalF: s.internalF }; }
+  });
+  const canonical = `${SITE_URL}/${loc.prefix}`;
+  const glanceRows = Object.keys(MEATS).map(k => { const m = MEATS[k];
+    const d = m.mode === 'doneness' ? m.doneness.medium : m.single;
+    return `<tr><td class="hl">${m.label}${m.mode === 'doneness' ? ' (medium)' : ''}</td><td>${unitMin(d.per500, loc)} min/lb + ${d.base} min base</td><td>${m.ovenF}°F</td><td>${d.internalF}°F</td></tr>`;
+  }).join('');
+  const faq = [
+    ['How do I calculate meat cooking time by weight?', `Multiply the minutes per pound for your meat and doneness by the weight, then add the base offset. For example, medium roast beef is about ${unitMin(MEATS.beef.doneness.medium.per500, loc)} minutes per pound plus 25 minutes, so a 4 lb joint takes roughly <strong>${fmtTime(total(MEATS.beef.doneness.medium.per500, MEATS.beef.doneness.medium.base, toKg(4, loc)))}</strong> at 350°F. Always confirm with a meat thermometer.`],
+    ['What internal temperature should meat reach?', 'Beef and lamb: <strong>125°F rare, 140°F medium, 158°F well done</strong>. Pork: <strong>160°F</strong>. Chicken: <strong>165°F</strong>. Ham/gammon: <strong>154°F</strong>. Measure the thickest part with a meat thermometer.'],
+    ['Does a convection oven cook meat faster?', 'Yes. A convection (fan) oven runs about 25–35°F hotter than a conventional oven, so set it lower for the same cooking time. This calculator lets you choose fan or conventional.'],
+    ['How long should meat rest after roasting?', 'Rest small cuts 8–10 minutes and large roasts 15–30 minutes, loosely tented with foil. Resting lets the juices redistribute so the meat stays moist when carved.'],
+  ];
+  const jsonld = [
+    webAppJsonLd('Meat Cooking Time Calculator', canonical, loc),
+    howToJsonLd('meat', loc),
+    faqJsonLd(faq),
+    { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: canonical }] },
+  ];
+  const hubGrid = HUBS.map(h => { const m = MEATS[h.key];
+    return `<a class="link-card" href="/us/${m.slug}/"><div class="t">${m.emoji} ${esc(h.h1.replace(' Cooking Time Calculator', ''))}</div><div class="sub">by weight, °F</div></a>`;
+  }).join('');
+  const body = `
+<header><div class="container">
+  <div class="badge">🍖 Beef · Lamb · Pork · Chicken · Ham · °F · US</div>
+  <h1>Meat Cooking Time Calculator</h1>
+  <p>Choose your meat, enter the weight in pounds and doneness — get the exact roasting time, oven temperature (°F), internal target temperature and resting time.</p>
+</div></header>
+<div class="container">
+<div class="tool-wrapper">
+  <div class="tool-card">
+    <div class="form-grid">
+      <div class="form-group"><label>Meat</label><select id="meat" onchange="onMeatChange()"></select></div>
+      <div class="form-group"><label>Weight (lb)</label><input type="number" id="wNum" min="0.5" max="26" step="0.1" value="4" placeholder="e.g. 4"></div>
+      <div class="form-group"><label>Oven type</label><select id="ovenType"><option value="fan">Convection / fan</option><option value="conv">Conventional</option></select></div>
+      <div class="form-group" id="doneWrap"><label>Doneness</label><div class="seg" id="doneSeg"></div></div>
+    </div>
+    <button class="calc-btn" onclick="calculate()">Calculate Cooking Time →</button>
+    <div class="result" id="result">
+      <div class="result-hero"><div class="rl">Total cooking time</div><div class="ra" id="r-time"></div><div class="rs" id="r-sub"></div></div>
+      <div class="result-grid">
+        <div class="r-stat"><div class="sv" id="r-oven"></div><div class="sl">Oven temperature</div></div>
+        <div class="r-stat"><div class="sv" id="r-internal"></div><div class="sl">Internal target</div></div>
+        <div class="r-stat"><div class="sv" id="r-rest"></div><div class="sl">Resting time</div></div>
+      </div>
+      <div class="result-grid" style="margin-bottom:14px;">
+        <div class="r-stat"><div class="sv" id="r-range"></div><div class="sl">Guidance range</div></div>
+        <div class="r-stat"><div class="sv" id="r-ready"></div><div class="sl">Ready if in now</div></div>
+        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl">Per lb</div></div>
+      </div>
+      <div class="therm-notice">🌡️ <strong>Always confirm with a meat thermometer.</strong> Times are guidance — the internal temperature is what makes it safe and perfect.</div>
+    </div>
+  </div>
+</div>
+<div class="content">
+  <h2 class="st">Choose Your Meat Calculator</h2>
+  <p>Dedicated calculators with cooking charts, cut variations and per-weight pages:</p>
+  <div class="link-grid">${hubGrid}</div>
+
+  <h2 class="st">Meat Cooking Times at a Glance (per pound, convection)</h2>
+  <table class="data-table"><thead><tr><th>Meat</th><th>Time per pound</th><th>Oven</th><th>Internal temp</th></tr></thead><tbody>${glanceRows}</tbody></table>
+
+  ${ctaBlock(loc)}
+  ${faqBlock(faq)}
+  <p style="margin-top:24px;"><a href="/" class="back-link">🇬🇧 Cooking in kilograms &amp; °C? Use the UK version →</a></p>
+</div></div>
+${footerBlock(`Meat Cooking Time Calculator · Beef · Lamb · Pork · Chicken · Ham`, loc)}
+<script>
+const MEATS = ${JSON.stringify(model)};
+let DONE = 'medium';
+const LB_PER_KG = 2.20462;
+const meatSel = document.getElementById('meat');
+Object.keys(MEATS).forEach(k => { const o=document.createElement('option'); o.value=k; o.textContent=MEATS[k].label; meatSel.appendChild(o); });
+function onMeatChange(){
+  const m = MEATS[meatSel.value]; const wrap = document.getElementById('doneWrap'); const seg = document.getElementById('doneSeg');
+  if(m.mode==='doneness'){ wrap.style.display='flex'; seg.innerHTML = Object.keys(m.doneness).map(k=>\`<button type="button" data-done="\${k}"\${k===m.defaultDoneness?' class="active"':''} onclick="pickDone(this)">\${m.doneness[k].label}</button>\`).join(''); DONE = m.defaultDoneness; }
+  else { wrap.style.display='none'; }
+}
+function pickDone(b){ document.querySelectorAll('#doneSeg button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); DONE=b.dataset.done; }
+function fmtTime(min){ min=Math.round(min); const h=Math.floor(min/60), m=min%60; if(h===0)return m+' min'; if(m===0)return h+' hr'; return h+' hr '+m+' min'; }
+function calculate(){
+  const m = MEATS[meatSel.value];
+  const lb = parseFloat(document.getElementById('wNum').value)||0;
+  if(lb<=0){ alert('Please enter a weight in lb.'); return; }
+  const kg = lb/LB_PER_KG;
+  const oven = document.getElementById('ovenType').value;
+  const d = m.mode==='doneness' ? m.doneness[DONE] : m.single;
+  const mid = d.per500*(kg*2)+d.base;
+  const lo = d.range[0]*(kg*2)+d.base, hi = d.range[1]*(kg*2)+d.base;
+  const ovenC = oven==='conv' ? m.ovenConvC : m.ovenC;
+  const ovenF = Math.round((ovenC*9/5+32)/5)*5;
+  document.getElementById('r-time').textContent = fmtTime(mid);
+  document.getElementById('r-sub').textContent = (m.mode==='doneness'? d.label+' · ':'') + m.label+' · '+lb+' lb · '+(oven==='conv'?'conventional':'convection')+' oven';
+  document.getElementById('r-oven').textContent = ovenF+'°F / '+ovenC+'°C';
+  document.getElementById('r-internal').textContent = d.internalF+'°F / '+d.internalC+'°C';
+  document.getElementById('r-rest').textContent = m.restMin+' min';
+  document.getElementById('r-range').textContent = fmtTime(lo)+' – '+fmtTime(hi);
+  document.getElementById('r-perkg').textContent = fmtTime((d.per500*2)/LB_PER_KG)+'/lb';
+  const ready = new Date(Date.now()+mid*60000);
+  document.getElementById('r-ready').textContent = ready.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  document.getElementById('result').style.display='block';
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function toggleFaq(b){ b.classList.toggle('open'); b.nextElementSibling.classList.toggle('open'); }
+onMeatChange();
+<\/script>`;
+  emit(loc.prefix.replace(/\/$/, ''), pageShell({ title: 'Meat Cooking Time Calculator (US) — Roast Beef, Lamb, Pork & Chicken by the Pound', desc: 'Free US meat cooking time calculator. Choose beef, lamb, pork or chicken, enter the weight in pounds and doneness → exact roasting time, oven temperature (°F), internal temperature and resting time.', keywords: 'meat cooking time calculator, cooking time calculator by pound, roast beef cooking time per pound, how long to cook a roast, meat roasting time calculator', canonical, jsonld, body, loc }));
+}
+buildHomepage(LOCALES.us);
+
+// ── Tier 4: informational pages (UK content; the 2 us/ °F pages funnel to the US hub) ──
 INFO.forEach(info => {
+  const loc = LOCALES.uk;
   const canonical = `${SITE_URL}/${info.slug}/`;
   const jsonld = [
     { '@type': 'Article', headline: info.h1, description: info.desc, inLanguage: 'en-GB', author: { '@type': 'Organization', name: 'Meat Cooking Time Calculator' } },
@@ -964,14 +1051,14 @@ INFO.forEach(info => {
 <div class="content">
   ${tbl}
   <div class="therm-notice" style="margin:20px 0;">🌡️ Whatever the time, doneness is decided by the <strong>internal temperature</strong> — check it with a meat thermometer.</div>
-  ${ctaBlock()}
+  ${ctaBlock(loc)}
   ${faqBlock(info.faq)}
   <h2 class="st">Meat Cooking Calculators</h2>
-  <div class="link-grid">${hubLinks(null)}</div>
+  <div class="link-grid">${hubLinks(null, loc)}</div>
 </div></div>
-${footerBlock(`<a href="/">Meat Cooking Time Calculator</a> · Guidance only — verify with a thermometer`)}
+${footerBlock(`<a href="/">Meat Cooking Time Calculator</a> · Guidance only — verify with a thermometer`, loc)}
 <script>function toggleFaq(b){b.classList.toggle('open');b.nextElementSibling.classList.toggle('open');}<\/script>`;
-  emit(info.slug, pageShell({ title: `${info.h1} — Times & Temperatures`, desc: info.desc, keywords: info.kw, canonical, jsonld, body }));
+  emit(info.slug, pageShell({ title: `${info.h1} — Times & Temperatures`, desc: info.desc, keywords: info.kw, canonical, jsonld, body, loc }));
 });
 
 // ── sitemap ──

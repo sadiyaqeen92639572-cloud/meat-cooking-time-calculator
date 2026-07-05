@@ -46,7 +46,7 @@
      "name": "What temperature for a 2kg leg of lamb?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Roast at 180°C fan (190°C conventional / 350°F). Sear hot then reduce to 180°C. Lamb is best pink (60°C). Rest 15 min before carving."
+      "text": "Roast at 180°C / 350°F. Sear hot then reduce to 180°C. Lamb is best pink (60°C). Rest 15 min before carving."
      }
     }
    ]
@@ -180,56 +180,34 @@ footer a { color:#e9d8c6; }
       <div class="result-grid" style="margin-bottom:14px;">
         <div class="r-stat"><div class="sv" id="r-range"></div><div class="sl">Guidance range</div></div>
         <div class="r-stat"><div class="sv" id="r-ready"></div><div class="sl">Ready if in now</div></div>
-        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl" id="r-perkg-label">Per kg</div></div>
+        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl">Per kg</div></div>
       </div>
       <div class="therm-notice">🌡️ <strong>Always confirm with a meat thermometer.</strong> Times are guidance — the internal temperature is what makes it safe and perfect.</div>
     </div>
   </div>
   <script>
-  const PAGE = {"mode":"doneness","doneness":{"rare":{"label":"Pink / rare","per500":20,"base":20,"range":[15,20],"internalC":55,"internalF":131},"medium":{"label":"Medium","per500":25,"base":25,"range":[20,25],"internalC":60,"internalF":140},"well":{"label":"Well done","per500":30,"base":30,"range":[25,30],"internalC":70,"internalF":158}},"single":null,"ovenC":180,"ovenConvC":190,"ovenF":350,"restMin":15,"defaultDoneness":"medium","fixedWeight":2};
+  const PAGE = {"mode":"doneness","doneness":{"rare":{"label":"Pink / rare","per500":20,"base":20,"range":[15,20],"internalC":55,"internalF":131},"medium":{"label":"Medium","per500":25,"base":25,"range":[20,25],"internalC":60,"internalF":140},"well":{"label":"Well done","per500":30,"base":30,"range":[25,30],"internalC":70,"internalF":158}},"single":null,"ovenC":180,"ovenConvC":190,"ovenF":350,"restMin":15,"defaultDoneness":"medium","fixedWeight":2,"unit":"kg","tempF":false};
   let DONE = PAGE.defaultDoneness;
   const LB_PER_KG = 2.20462;
-  let WEIGHT_UNIT = 'kg';
-  function setUnit(unit){
-    if(unit===WEIGHT_UNIT) return;
-    const input = document.getElementById('wNum');
-    const val = parseFloat(input.value)||0;
-    if(unit==='lbs') input.value = Math.round(val*LB_PER_KG*10)/10;
-    else input.value = Math.round((val/LB_PER_KG)*10)/10;
-    WEIGHT_UNIT = unit;
-    document.querySelectorAll('#unitSeg button').forEach(b=>b.classList.toggle('active', b.dataset.unit===unit));
-    const lbl = document.getElementById('wLabel');
-    if(lbl) lbl.textContent = 'Weight ('+unit+')';
-    input.min = unit==='lbs' ? 0.5 : 0.2;
-    input.max = unit==='lbs' ? 26 : 12;
-    input.placeholder = unit==='lbs' ? 'e.g. 4.5' : 'e.g. 2';
-  }
   function pickDone(b){ document.querySelectorAll('#doneSeg button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); DONE = b.dataset.done; }
   function fmtTime(min){ min=Math.round(min); const h=Math.floor(min/60), m=min%60; if(h===0)return m+' min'; if(m===0)return h+' hr'; return h+' hr '+m+' min'; }
   function calculate(){
     const wRaw = parseFloat(document.getElementById('wNum').value)||0;
-    if(wRaw<=0){ alert('Please enter a weight in '+WEIGHT_UNIT+'.'); return; }
-    const kg = WEIGHT_UNIT==='lbs' ? wRaw/LB_PER_KG : wRaw;
+    if(wRaw<=0){ alert('Please enter a weight in '+PAGE.unit+'.'); return; }
+    const kg = PAGE.unit==='lb' ? wRaw/LB_PER_KG : wRaw;
     const oven = (document.getElementById('ovenType')||{}).value || 'fan';
     const d = PAGE.mode==='doneness' ? PAGE.doneness[DONE] : PAGE.single;
     const mid = d.per500*(kg*2)+d.base;
     const lo = d.range[0]*(kg*2)+d.base, hi = d.range[1]*(kg*2)+d.base;
     const ovenC = oven==='conv' ? PAGE.ovenConvC : PAGE.ovenC;
     const ovenF = Math.round((ovenC*9/5+32)/5)*5;
-    const wLabel = WEIGHT_UNIT==='lbs' ? wRaw+' lbs' : kg+' kg';
     document.getElementById('r-time').textContent = fmtTime(mid);
-    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wLabel+' · '+(oven==='conv'?'conventional':'fan')+' oven';
-    document.getElementById('r-oven').textContent = ovenC+'°C / '+ovenF+'°F';
-    document.getElementById('r-internal').textContent = d.internalC+'°C / '+d.internalF+'°F';
+    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wRaw+' '+PAGE.unit+' · '+(oven==='conv'?'conventional':'fan')+' oven';
+    document.getElementById('r-oven').textContent = PAGE.tempF ? ovenF+'°F / '+ovenC+'°C' : ovenC+'°C / '+ovenF+'°F';
+    document.getElementById('r-internal').textContent = PAGE.tempF ? d.internalF+'°F / '+d.internalC+'°C' : d.internalC+'°C / '+d.internalF+'°F';
     document.getElementById('r-rest').textContent = PAGE.restMin+' min';
     document.getElementById('r-range').textContent = fmtTime(lo)+' – '+fmtTime(hi);
-    if(WEIGHT_UNIT==='lbs'){
-      document.getElementById('r-perkg').textContent = fmtTime((d.per500*2)/LB_PER_KG)+'/lb';
-      document.getElementById('r-perkg-label').textContent = 'Per lb';
-    } else {
-      document.getElementById('r-perkg').textContent = fmtTime(d.per500*2)+'/kg';
-      document.getElementById('r-perkg-label').textContent = 'Per kg';
-    }
+    document.getElementById('r-perkg').textContent = PAGE.unit==='lb' ? fmtTime((d.per500*2)/LB_PER_KG)+'/lb' : fmtTime(d.per500*2)+'/kg';
     const ready = new Date(Date.now()+mid*60000);
     document.getElementById('r-ready').textContent = ready.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     document.getElementById('result').style.display='block';
@@ -252,8 +230,8 @@ footer a { color:#e9d8c6; }
     </div>
     <div class="cta-card">
       <h3>🍳 Roasting kit that gets results</h3>
-      <p>A heavy roasting tin, a leave-in probe and a sharp carving knife make a real difference to your Sunday roast.</p>
-      <a href="https://www.amazon.co.uk/s?k=roasting+tin+set&tag=YOURTAG-21" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
+      <p>A heavy roasting pan, a leave-in probe and a sharp carving knife make a real difference to your roast.</p>
+      <a href="https://www.amazon.co.uk/s?k=roasting+pan+set&tag=YOURTAG-21" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
     </div>
   </div>
   <div class="adslot">Advertisement</div>
@@ -264,12 +242,12 @@ footer a { color:#e9d8c6; }
   <div class="method">
     <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard UK roasting guidance · applied deterministically · verify with a thermometer</p>
     <table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
-      <tr><td>Pink / rare — min per 500 g</td><td class="hl">20 min (range 15–20)</td><td>UK roasting guides</td></tr><tr><td>Pink / rare — internal temp</td><td class="hl">55°C / 131°F</td><td>FSA / thermometer</td></tr><tr><td>Medium — min per 500 g</td><td class="hl">25 min (range 20–25)</td><td>UK roasting guides</td></tr><tr><td>Medium — internal temp</td><td class="hl">60°C / 140°F</td><td>FSA / thermometer</td></tr><tr><td>Well done — min per 500 g</td><td class="hl">30 min (range 25–30)</td><td>UK roasting guides</td></tr><tr><td>Well done — internal temp</td><td class="hl">70°C / 158°F</td><td>FSA / thermometer</td></tr><tr><td>Base offset</td><td class="hl">25 min</td><td>Standard</td></tr><tr><td>Oven</td><td class="hl">220°C sear for 20 min, then 180°C</td><td>Method</td></tr><tr><td>Resting</td><td class="hl">15 min</td><td>Best practice</td></tr>
+      <tr><td>Pink / rare — time per kg</td><td class="hl">20 min per 500 g (range 15–20/500 g)</td><td>UK roasting guides</td></tr><tr><td>Pink / rare — internal temp</td><td class="hl">55°C / 131°F</td><td>USDA / thermometer</td></tr><tr><td>Medium — time per kg</td><td class="hl">25 min per 500 g (range 20–25/500 g)</td><td>UK roasting guides</td></tr><tr><td>Medium — internal temp</td><td class="hl">60°C / 140°F</td><td>USDA / thermometer</td></tr><tr><td>Well done — time per kg</td><td class="hl">30 min per 500 g (range 25–30/500 g)</td><td>UK roasting guides</td></tr><tr><td>Well done — internal temp</td><td class="hl">70°C / 158°F</td><td>USDA / thermometer</td></tr><tr><td>Base offset</td><td class="hl">25 min</td><td>Standard</td></tr><tr><td>Oven</td><td class="hl">220°C sear for 20 min, then 180°C</td><td>Method</td></tr><tr><td>Resting</td><td class="hl">15 min</td><td>Best practice</td></tr>
     </tbody></table>
     <div class="code">
 <span class="c">— Lamb cooking time —</span><br>
 <span class="k">total_min</span> = min_per_500g × (weight_g / 500) + base_offset<br>
-<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight_g / 500) + base_offset<br>
+<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight / 500) + base_offset<br>
 <span class="k">conventional_oven</span> = fan_temp + 10–20°C (same time)<br>
 <span class="k">fahrenheit</span> = derived table from °C<br>
 <span class="c">— algorithm —</span><br>
@@ -281,7 +259,7 @@ lookup(meat, cut, doneness) → point_estimate → guidance_range<br>
   
   <h2 class="st">Frequently Asked Questions</h2>
   <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">How long to cook a 2kg leg of lamb?</button><div class="faq-a">A 2 kg leg of lamb takes about <strong>2 hr 5 min</strong> for medium (1 hr 40 min rare, 2 hr 30 min well done) at 180°C fan.</div></div>
-  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What temperature for a 2kg leg of lamb?</button><div class="faq-a">Roast at 180°C fan (190°C conventional / 350°F). Sear hot then reduce to 180°C. Lamb is best pink (60°C). Rest 15 min before carving.</div></div>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What temperature for a 2kg leg of lamb?</button><div class="faq-a">Roast at 180°C / 350°F. Sear hot then reduce to 180°C. Lamb is best pink (60°C). Rest 15 min before carving.</div></div>
 </div></div>
 <footer><div class="container">
     <div class="disc">Cooking times are guidance compiled from standard UK roasting guides and applied deterministically — not a food-safety authority. Always cook meat to a safe internal temperature, checked with a meat thermometer.</div>

@@ -46,7 +46,7 @@
      "name": "What temperature should chicken be cooked to inside?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Chicken should reach an internal temperature of 74°C (165°F). Roast at 180°C fan. Juices must run clear and the thickest part reach 74°C. Rest 15 min."
+      "text": "Chicken should reach an internal temperature of 74°C (74°C / 165°F). Roast at 180°C fan. Juices must run clear and the thickest part reach 74°C. Rest 15 min."
      }
     },
     {
@@ -54,7 +54,7 @@
      "name": "Does a fan oven cook chicken faster?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Yes. A fan oven runs about 20°C hotter than conventional — use 180°C fan (200°C conventional) for the times shown. Roast at 180°C fan. Juices must run clear and the thickest part reach 74°C. Rest 15 min."
+      "text": "Yes. A fan (convection) oven runs about 20°C / 35°F hotter than conventional — use 180°C / 375°F for the times shown. Roast at 180°C fan. Juices must run clear and the thickest part reach 74°C. Rest 15 min."
      }
     }
    ]
@@ -185,7 +185,7 @@ footer a { color:#e9d8c6; }
 <body>
 
 <header><div class="container">
-  <div class="badge">🐔 Chicken · °C &amp; °F · UK &amp; US</div>
+  <div class="badge">🐔 Chicken · °C · UK</div>
   <h1>Roast Chicken Cooking Time Calculator</h1>
   <p>Enter the weight of your whole chicken — get the exact roasting time, oven temperature and the safe internal temperature. Works for any size bird.</p>
 </div></header>
@@ -193,15 +193,7 @@ footer a { color:#e9d8c6; }
 <div class="tool-wrapper">
   <div class="tool-card">
     <div class="form-grid">
-      <div class="form-group"><label id="wLabel">Weight (kg)</label>
-         <div style="display:flex;gap:6px;">
-           <input type="number" id="wNum" min="0.2" max="12" step="0.1" value="2" placeholder="e.g. 2" style="flex:1;">
-           <div class="seg" id="unitSeg" style="flex:0 0 auto;">
-             <button type="button" class="active" data-unit="kg" onclick="setUnit('kg')" style="min-width:52px;">kg</button>
-             <button type="button" data-unit="lbs" onclick="setUnit('lbs')" style="min-width:52px;">lbs</button>
-           </div>
-         </div>
-       </div>
+      <div class="form-group"><label>Weight (kg)</label><input type="number" id="wNum" min="0.2" max="12" step="0.1" value="2" placeholder="e.g. 2"></div>
        <div class="form-group"><label>Oven type</label><select id="ovenType"><option value="fan">Fan / convection</option><option value="conv">Conventional</option></select></div>
       
       
@@ -221,56 +213,34 @@ footer a { color:#e9d8c6; }
       <div class="result-grid" style="margin-bottom:14px;">
         <div class="r-stat"><div class="sv" id="r-range"></div><div class="sl">Guidance range</div></div>
         <div class="r-stat"><div class="sv" id="r-ready"></div><div class="sl">Ready if in now</div></div>
-        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl" id="r-perkg-label">Per kg</div></div>
+        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl">Per kg</div></div>
       </div>
       <div class="therm-notice">🌡️ <strong>Always confirm with a meat thermometer.</strong> Times are guidance — the internal temperature is what makes it safe and perfect.</div>
     </div>
   </div>
   <script>
-  const PAGE = {"mode":"single","doneness":null,"single":{"label":"Cooked through","per500":20,"base":20,"range":[18,22],"internalC":74,"internalF":165},"ovenC":180,"ovenConvC":200,"ovenF":375,"restMin":15,"defaultDoneness":null,"fixedWeight":null};
+  const PAGE = {"mode":"single","doneness":null,"single":{"label":"Cooked through","per500":20,"base":20,"range":[18,22],"internalC":74,"internalF":165},"ovenC":180,"ovenConvC":200,"ovenF":375,"restMin":15,"defaultDoneness":null,"fixedWeight":null,"unit":"kg","tempF":false};
   let DONE = PAGE.defaultDoneness;
   const LB_PER_KG = 2.20462;
-  let WEIGHT_UNIT = 'kg';
-  function setUnit(unit){
-    if(unit===WEIGHT_UNIT) return;
-    const input = document.getElementById('wNum');
-    const val = parseFloat(input.value)||0;
-    if(unit==='lbs') input.value = Math.round(val*LB_PER_KG*10)/10;
-    else input.value = Math.round((val/LB_PER_KG)*10)/10;
-    WEIGHT_UNIT = unit;
-    document.querySelectorAll('#unitSeg button').forEach(b=>b.classList.toggle('active', b.dataset.unit===unit));
-    const lbl = document.getElementById('wLabel');
-    if(lbl) lbl.textContent = 'Weight ('+unit+')';
-    input.min = unit==='lbs' ? 0.5 : 0.2;
-    input.max = unit==='lbs' ? 26 : 12;
-    input.placeholder = unit==='lbs' ? 'e.g. 4.5' : 'e.g. 2';
-  }
   function pickDone(b){ document.querySelectorAll('#doneSeg button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); DONE = b.dataset.done; }
   function fmtTime(min){ min=Math.round(min); const h=Math.floor(min/60), m=min%60; if(h===0)return m+' min'; if(m===0)return h+' hr'; return h+' hr '+m+' min'; }
   function calculate(){
     const wRaw = parseFloat(document.getElementById('wNum').value)||0;
-    if(wRaw<=0){ alert('Please enter a weight in '+WEIGHT_UNIT+'.'); return; }
-    const kg = WEIGHT_UNIT==='lbs' ? wRaw/LB_PER_KG : wRaw;
+    if(wRaw<=0){ alert('Please enter a weight in '+PAGE.unit+'.'); return; }
+    const kg = PAGE.unit==='lb' ? wRaw/LB_PER_KG : wRaw;
     const oven = (document.getElementById('ovenType')||{}).value || 'fan';
     const d = PAGE.mode==='doneness' ? PAGE.doneness[DONE] : PAGE.single;
     const mid = d.per500*(kg*2)+d.base;
     const lo = d.range[0]*(kg*2)+d.base, hi = d.range[1]*(kg*2)+d.base;
     const ovenC = oven==='conv' ? PAGE.ovenConvC : PAGE.ovenC;
     const ovenF = Math.round((ovenC*9/5+32)/5)*5;
-    const wLabel = WEIGHT_UNIT==='lbs' ? wRaw+' lbs' : kg+' kg';
     document.getElementById('r-time').textContent = fmtTime(mid);
-    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wLabel+' · '+(oven==='conv'?'conventional':'fan')+' oven';
-    document.getElementById('r-oven').textContent = ovenC+'°C / '+ovenF+'°F';
-    document.getElementById('r-internal').textContent = d.internalC+'°C / '+d.internalF+'°F';
+    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wRaw+' '+PAGE.unit+' · '+(oven==='conv'?'conventional':'fan')+' oven';
+    document.getElementById('r-oven').textContent = PAGE.tempF ? ovenF+'°F / '+ovenC+'°C' : ovenC+'°C / '+ovenF+'°F';
+    document.getElementById('r-internal').textContent = PAGE.tempF ? d.internalF+'°F / '+d.internalC+'°C' : d.internalC+'°C / '+d.internalF+'°F';
     document.getElementById('r-rest').textContent = PAGE.restMin+' min';
     document.getElementById('r-range').textContent = fmtTime(lo)+' – '+fmtTime(hi);
-    if(WEIGHT_UNIT==='lbs'){
-      document.getElementById('r-perkg').textContent = fmtTime((d.per500*2)/LB_PER_KG)+'/lb';
-      document.getElementById('r-perkg-label').textContent = 'Per lb';
-    } else {
-      document.getElementById('r-perkg').textContent = fmtTime(d.per500*2)+'/kg';
-      document.getElementById('r-perkg-label').textContent = 'Per kg';
-    }
+    document.getElementById('r-perkg').textContent = PAGE.unit==='lb' ? fmtTime((d.per500*2)/LB_PER_KG)+'/lb' : fmtTime(d.per500*2)+'/kg';
     const ready = new Date(Date.now()+mid*60000);
     document.getElementById('r-ready').textContent = ready.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     document.getElementById('result').style.display='block';
@@ -286,9 +256,6 @@ footer a { color:#e9d8c6; }
   <h2 class="st">Chicken Cooking Times by Weight</h2>
   <p>Jump to a pre-filled calculator for your exact joint size:</p>
   <div class="link-grid"><a class="link-card" href="/roast-chicken-cooking-time-calculator/1kg/">1 kg<div class="sub">cooking time</div></a><a class="link-card" href="/roast-chicken-cooking-time-calculator/1-2kg/">1.2 kg<div class="sub">cooking time</div></a><a class="link-card" href="/roast-chicken-cooking-time-calculator/1-4kg/">1.4 kg<div class="sub">cooking time</div></a><a class="link-card" href="/roast-chicken-cooking-time-calculator/1-5kg/">1.5 kg<div class="sub">cooking time</div></a><a class="link-card" href="/roast-chicken-cooking-time-calculator/1-6kg/">1.6 kg<div class="sub">cooking time</div></a><a class="link-card" href="/roast-chicken-cooking-time-calculator/1-8kg/">1.8 kg<div class="sub">cooking time</div></a><a class="link-card" href="/roast-chicken-cooking-time-calculator/2kg/">2 kg<div class="sub">cooking time</div></a><a class="link-card" href="/roast-chicken-cooking-time-calculator/2-5kg/">2.5 kg<div class="sub">cooking time</div></a></div>
-  <h2 class="st">🇺🇸 Chicken Cooking Times by Pound (US)</h2>
-  <p>US recipes and °F ovens? Jump to a pre-filled calculator by pound:</p>
-  <div class="link-grid"><a class="link-card" href="/us/chicken-3lb/">3 lb<div class="sub">cooking time</div></a><a class="link-card" href="/us/chicken-4lb/">4 lb<div class="sub">cooking time</div></a><a class="link-card" href="/us/chicken-5lb/">5 lb<div class="sub">cooking time</div></a><a class="link-card" href="/us/chicken-6lb/">6 lb<div class="sub">cooking time</div></a><a class="link-card" href="/us/chicken-7lb/">7 lb<div class="sub">cooking time</div></a><a class="link-card" href="/us/chicken-8lb/">8 lb<div class="sub">cooking time</div></a></div>
   <h2 class="st">Chicken Cuts</h2><div class="link-grid"><a class="link-card" href="/whole-chicken-cooking-time-calculator/">Whole chicken<div class="sub">whole chicken cooking time calculator</div></a><a class="link-card" href="/spatchcock-chicken-cooking-time-calculator/">Spatchcock chicken<div class="sub">spatchcock chicken cooking time calculator</div></a><a class="link-card" href="/chicken-crown-cooking-time-calculator/">Chicken crown<div class="sub">chicken crown cooking time calculator</div></a><a class="link-card" href="/stuffed-chicken-cooking-time-calculator/">Stuffed chicken<div class="sub">stuffed chicken cooking time calculator</div></a></div>
   
   <div class="cta-grid">
@@ -299,8 +266,8 @@ footer a { color:#e9d8c6; }
     </div>
     <div class="cta-card">
       <h3>🍳 Roasting kit that gets results</h3>
-      <p>A heavy roasting tin, a leave-in probe and a sharp carving knife make a real difference to your Sunday roast.</p>
-      <a href="https://www.amazon.co.uk/s?k=roasting+tin+set&tag=YOURTAG-21" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
+      <p>A heavy roasting pan, a leave-in probe and a sharp carving knife make a real difference to your roast.</p>
+      <a href="https://www.amazon.co.uk/s?k=roasting+pan+set&tag=YOURTAG-21" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
     </div>
   </div>
   <div class="adslot">Advertisement</div>
@@ -309,12 +276,12 @@ footer a { color:#e9d8c6; }
   <div class="method">
     <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard UK roasting guidance · applied deterministically · verify with a thermometer</p>
     <table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
-      <tr><td>Min per 500 g</td><td class="hl">20 min (range 18–22)</td><td>UK roasting guides</td></tr><tr><td>Internal target</td><td class="hl">74°C / 165°F</td><td>FSA / thermometer</td></tr><tr><td>Base offset</td><td class="hl">20 min</td><td>Standard</td></tr><tr><td>Oven</td><td class="hl">180°C fan</td><td>Method</td></tr><tr><td>Resting</td><td class="hl">15 min</td><td>Best practice</td></tr>
+      <tr><td>Time per kg</td><td class="hl">20 min per 500 g (range 18–22/500 g)</td><td>UK roasting guides</td></tr><tr><td>Internal target</td><td class="hl">74°C / 165°F</td><td>USDA / thermometer</td></tr><tr><td>Base offset</td><td class="hl">20 min</td><td>Standard</td></tr><tr><td>Oven</td><td class="hl">180°C fan</td><td>Method</td></tr><tr><td>Resting</td><td class="hl">15 min</td><td>Best practice</td></tr>
     </tbody></table>
     <div class="code">
 <span class="c">— Chicken cooking time —</span><br>
 <span class="k">total_min</span> = min_per_500g × (weight_g / 500) + base_offset<br>
-<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight_g / 500) + base_offset<br>
+<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight / 500) + base_offset<br>
 <span class="k">conventional_oven</span> = fan_temp + 10–20°C (same time)<br>
 <span class="k">fahrenheit</span> = derived table from °C<br>
 <span class="c">— algorithm —</span><br>
@@ -326,8 +293,9 @@ lookup(meat, cut, doneness) → point_estimate → guidance_range<br>
   
   <h2 class="st">Frequently Asked Questions</h2>
   <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">How long to cook a chicken per kg?</button><div class="faq-a">About 40 minutes per kg plus 20 minutes, at 180°C fan, to an internal temperature of 74°C.</div></div>
-  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What temperature should chicken be cooked to inside?</button><div class="faq-a">Chicken should reach an internal temperature of <strong>74°C</strong> (165°F). Roast at 180°C fan. Juices must run clear and the thickest part reach 74°C. Rest 15 min.</div></div>
-  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Does a fan oven cook chicken faster?</button><div class="faq-a">Yes. A fan oven runs about 20°C hotter than conventional — use 180°C fan (200°C conventional) for the times shown. Roast at 180°C fan. Juices must run clear and the thickest part reach 74°C. Rest 15 min.</div></div>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What temperature should chicken be cooked to inside?</button><div class="faq-a">Chicken should reach an internal temperature of <strong>74°C</strong> (74°C / 165°F). Roast at 180°C fan. Juices must run clear and the thickest part reach 74°C. Rest 15 min.</div></div>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Does a fan oven cook chicken faster?</button><div class="faq-a">Yes. A fan (convection) oven runs about 20°C / 35°F hotter than conventional — use 180°C / 375°F for the times shown. Roast at 180°C fan. Juices must run clear and the thickest part reach 74°C. Rest 15 min.</div></div>
+  <p style="margin-top:24px;"><a href="/us/roast-chicken-cooking-time-calculator/" class="back-link">🇺🇸 Cooking in pounds &amp; °F? Use the US chicken calculator →</a></p>
   <h2 class="st">Other Meat Calculators</h2>
   <div class="link-grid"><a class="link-card" href="/roast-beef-cooking-time-calculator/">🥩 Beef<div class="sub">Cooking time calculator</div></a><a class="link-card" href="/leg-of-lamb-cooking-time-calculator/">🐑 Lamb<div class="sub">Cooking time calculator</div></a><a class="link-card" href="/roast-pork-cooking-time-calculator/">🐖 Pork<div class="sub">Cooking time calculator</div></a></div>
 </div></div>
