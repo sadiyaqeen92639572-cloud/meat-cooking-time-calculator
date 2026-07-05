@@ -191,6 +191,14 @@ const WEIGHT_STEPS = {
   chicken: [1, 1.2, 1.4, 1.5, 1.6, 1.8, 2, 2.5],
 };
 
+// US market — pound-based weight steps per hub (mirrors WEIGHT_STEPS, common lb sizes)
+const LB_STEPS = {
+  beef: [3, 4, 5, 6, 7, 8],
+  lamb: [3, 4, 5, 6, 7],
+  pork: [3, 4, 5, 6, 7, 8],
+  chicken: [3, 4, 5, 6, 7, 8],
+};
+
 // ─────────────────────────────────────────────────────────────
 // TIER 4 — informational pages (content + reference tables + funnel to a calculator)
 // ─────────────────────────────────────────────────────────────
@@ -529,7 +537,7 @@ function calcWidget(cfg) {
   const PAGE = ${JSON.stringify(PAGE)};
   let DONE = PAGE.defaultDoneness;
   const LB_PER_KG = 2.20462;
-  let WEIGHT_UNIT = 'kg';
+  let WEIGHT_UNIT = '${cfg.fixedWeightUnit || 'kg'}';
   function setUnit(unit){
     if(unit===WEIGHT_UNIT) return;
     const input = document.getElementById('wNum');
@@ -705,6 +713,10 @@ function weightLinksFor(meatKey, slug, current) {
     `<a class="link-card" href="/${slug}/${wSlug(w)}/"${w === current ? ' style="border-color:var(--brand)"' : ''}>${w} kg<div class="sub">cooking time</div></a>`).join('');
 }
 function wSlug(w) { return String(w).replace('.', '-') + 'kg'; }
+function lbWeightLinksFor(meatKey, current) {
+  return (LB_STEPS[meatKey] || []).map(lb =>
+    `<a class="link-card" href="/us/${meatKey}-${lb}lb/"${lb === current ? ' style="border-color:var(--brand)"' : ''}>${lb} lb<div class="sub">cooking time</div></a>`).join('');
+}
 
 // ═════════════════════════════════════════════════════════════
 // EMITTERS
@@ -820,6 +832,57 @@ ${footerBlock(`${esc(m.label)} cooking time calculator · <a href="/">Home</a> �
 </div></div>
 ${footerBlock(`${w} kg ${esc(m.label)} · <a href="/${m.slug}/">${esc(m.label)} calculator</a> · <a href="/">Home</a>`)}`;
     emit(`${m.slug}/${wSlug(w)}`, pageShell({ title: wtitle, desc: wdesc, keywords: `how long to cook a ${w}kg ${dish}, ${w}kg ${dish} cooking time, ${w} kg ${dish} roasting time`, canonical: wcanon, jsonld: wjson, body: wbody }));
+  });
+
+  // ── Tier 3-US: pound-based weight pages for this hub ──
+  (LB_STEPS[hub.key] || []).forEach(lb => {
+    const kgEquiv = Math.round((lb / 2.20462) * 100) / 100;
+    const lcfg = Object.assign({}, cfg, { fixedWeight: lb, fixedWeightUnit: 'lbs' });
+    const lcanon = `${SITE_URL}/us/${hub.key}-${lb}lb/`;
+    const dish = m.dishLabel;
+    const Dish = dish.charAt(0).toUpperCase() + dish.slice(1);
+    const ltimeMain = m.mode === 'doneness' ? fmtTime(total(m.doneness.medium.per500, m.doneness.medium.base, kgEquiv)) : fmtTime(total(m.single.per500, m.single.base, kgEquiv));
+    const ltitle = `How Long to Cook a ${lb} lb ${Dish} — Cooking Time (US)`;
+    const ldesc = `A ${lb} lb ${dish} takes about ${ltimeMain}${m.mode === 'doneness' ? ' for medium' : ''} at ${m.ovenF}°F. Exact time, temperature (°F) and resting time for the US market.`;
+    const lfaq = [
+      [`How long to cook a ${lb} lb ${dish}?`,
+        m.mode === 'doneness'
+          ? `A ${lb} lb ${dish} takes about <strong>${fmtTime(total(m.doneness.medium.per500, m.doneness.medium.base, kgEquiv))}</strong> for medium (${fmtTime(total(m.doneness.rare.per500, m.doneness.rare.base, kgEquiv))} rare, ${fmtTime(total(m.doneness.well.per500, m.doneness.well.base, kgEquiv))} well done) at ${m.ovenF}°F.`
+          : `A ${lb} lb ${dish} takes about <strong>${ltimeMain}</strong> at ${m.ovenF}°F, to an internal temperature of ${m.single.internalF}°F.`],
+      [`What oven temperature for a ${lb} lb ${dish}?`, `Roast at ${m.ovenF}°F (${m.ovenC}°C fan / ${m.ovenConvC}°C conventional). ${m.note}`],
+    ];
+    const ljson = [webAppJsonLd(ltitle, lcanon), faqJsonLd(lfaq),
+      { '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
+        { '@type': 'ListItem', position: 2, name: hub.h1, item: canonical },
+        { '@type': 'ListItem', position: 3, name: `${lb} lb`, item: lcanon }] }];
+    const lchartHead = m.mode === 'doneness'
+      ? ['Weight', ...Object.keys(m.doneness).map(k => m.doneness[k].label)]
+      : ['Weight', 'Cooking time', 'Internal temp'];
+    const lbody = `
+<header><div class="container">
+  <div class="badge">${m.emoji} ${lb} lb ${esc(Dish)} · US</div>
+  <h1>How Long to Cook a ${lb} lb ${esc(Dish)}?</h1>
+  <p>A ${lb} lb ${esc(dish)} takes about <strong>${ltimeMain}</strong>${m.mode === 'doneness' ? ' for medium' : ''}. Adjust oven type${m.mode === 'doneness' ? ' and doneness' : ''} below.</p>
+</div></header>
+<div class="container">
+<div class="tool-wrapper">${calcWidget(lcfg)}</div>
+<div class="content">
+  <a href="/${m.slug}/" class="back-link">← ${esc(m.label)} calculator</a>
+  <h2 class="st">Cooking Times for a ${lb} lb ${esc(Dish)}</h2>
+  <table class="data-table"><thead><tr>${lchartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>
+  ${m.mode === 'doneness'
+        ? `<tr><td class="hl">${lb} lb</td>${Object.keys(m.doneness).map(k => `<td>${fmtTime(total(m.doneness[k].per500, m.doneness[k].base, kgEquiv))}</td>`).join('')}</tr>`
+        : `<tr><td class="hl">${lb} lb</td><td>${ltimeMain}</td><td>${m.single.internalF}°F</td></tr>`}
+  </tbody></table>
+  ${ctaBlock()}
+  <h2 class="st">Other Weights (lb)</h2>
+  <div class="link-grid">${lbWeightLinksFor(hub.key, lb)}</div>
+  ${methodBlock(cfg, m.label)}
+  ${faqBlock(lfaq)}
+</div></div>
+${footerBlock(`${lb} lb ${esc(m.label)} · <a href="/${m.slug}/">${esc(m.label)} calculator</a> · <a href="/">Home</a>`)}`;
+    emit(`us/${hub.key}-${lb}lb`, pageShell({ title: ltitle, desc: ldesc, keywords: `how long to cook a ${lb} lb ${dish}, ${lb} lb ${dish} cooking time, ${lb} pound ${dish} cooking time`, canonical: lcanon, jsonld: ljson, body: lbody }));
   });
 });
 
