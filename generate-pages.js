@@ -476,7 +476,14 @@ footer { background:#2c1c10; color:#c9b7a6; text-align:center; padding:30px 20px
 footer p { color:#c9b7a6; }
 footer a { color:#e9d8c6; }
 .disc { background:#3a2818; border-radius:8px; padding:13px 18px; margin-bottom:16px; font-size:.78rem; color:#c9b7a6; line-height:1.6; }
+.locale-switch { position:sticky; top:0; z-index:200; display:flex; justify-content:center; gap:6px; padding:7px 10px; background:#2c1c10; border-bottom:1px solid rgba(255,255,255,.08); }
+.ls-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border-radius:20px; font-size:.8rem; font-weight:600; text-decoration:none; color:#e9d8c6; border:1px solid rgba(255,255,255,.14); transition:all .15s; white-space:nowrap; }
+.ls-btn:hover { background:rgba(255,255,255,.10); }
+.ls-btn.active { background:#fff; color:#2c1c10; border-color:#fff; }
 `;
+
+// Flag switch bar (UK ↔ US) + auto-detect. Injected on every page via pageShell.
+const LOCALE_SWITCH_HTML = `<div class="locale-switch"><a href="/" class="ls-btn" data-loc="uk">🇬🇧 UK · kg/°C</a><a href="/us/" class="ls-btn" data-loc="us">🇺🇸 US · lb/°F</a></div>`;
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function jstr(s) { return String(s).replace(/"/g, '\\"'); }
@@ -668,6 +675,40 @@ function webAppJsonLd(name, url, loc) {
   return { '@type': 'WebApplication', name, url, applicationCategory: 'LifestyleApplication', operatingSystem: 'Any', inLanguage: loc.lang, offers: { '@type': 'Offer', price: '0', priceCurrency: loc.currency } };
 }
 
+// Slugs that exist in BOTH locales (hubs + cuts) → deep-link maps 1:1 across the switch.
+const MIRROR_SLUGS_JSON = JSON.stringify([...new Set([...HUBS.map(h => MEATS[h.key].slug), ...CUTS.map(c => c.slug)])]);
+const LOCALE_SWITCH_JS = `<script>(function(){
+var MIRROR=${MIRROR_SLUGS_JSON};
+var p=location.pathname; if(p.charAt(p.length-1)!=='/') p+='/';
+var isUS=(p.indexOf('/us/')===0);
+var base=(isUS?p.substring(3):p).replace(/\\/(\\d+(?:-\\d+)?)(kg|lb)\\/$/,'/');
+var m=base.match(/^\\/([^\\/]+)\\/$/); var slug=m?m[1]:null;
+var mapped=(base==='/')||(slug&&MIRROR.indexOf(slug)>=0);
+var ukUrl=isUS?(mapped?base:'/'):p;
+var usUrl=isUS?p:(mapped?'/us'+base:'/us/');
+var uk=document.querySelector('.ls-btn[data-loc="uk"]');
+var us=document.querySelector('.ls-btn[data-loc="us"]');
+if(uk){uk.setAttribute('href',ukUrl); uk.addEventListener('click',function(){try{localStorage.setItem('mctc_loc','uk')}catch(e){}});}
+if(us){us.setAttribute('href',usUrl); us.addEventListener('click',function(){try{localStorage.setItem('mctc_loc','us')}catch(e){}});}
+(isUS?us:uk).classList.add('active');
+try{
+  var onHome=(p==='/'||p==='/us/');
+  if(onHome&&!sessionStorage.getItem('mctc_geo')){
+    sessionStorage.setItem('mctc_geo','1');
+    var pref=null; try{pref=localStorage.getItem('mctc_loc')}catch(e){}
+    var wantUS;
+    if(pref){ wantUS=(pref==='us'); }
+    else {
+      var lang=(navigator.language||'').toLowerCase();
+      var tz=''; try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      wantUS=(lang==='en-us')|| /^America\\//.test(tz);
+    }
+    if(wantUS&&!isUS){ location.replace('/us/'); }
+    else if(!wantUS&&isUS){ location.replace('/'); }
+  }
+}catch(e){}
+})();<\/script>`;
+
 function pageShell({ title, desc, keywords, canonical, jsonld, body, loc }) {
   const L = loc || LOCALES.uk;
   return `<!DOCTYPE html>
@@ -691,7 +732,9 @@ ${JSON.stringify({ '@context': 'https://schema.org', '@graph': jsonld }, null, 1
 <style>${CSS}</style>
 </head>
 <body>
+${LOCALE_SWITCH_HTML}
 ${body}
+${LOCALE_SWITCH_JS}
 </body>
 </html>`;
 }
