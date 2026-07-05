@@ -3,7 +3,15 @@
 Free meat roasting-time calculators — enter meat type, cut, weight and doneness to get the exact
 cooking time, oven temperature (°C & °F), internal target temperature and resting time.
 
-**Live site:** _github.io Pages URL (add CNAME when the domain is bought)_
+**Live site:** [cookingmeatcalculator.com](https://cookingmeatcalculator.com)
+
+## Free Companion Tools
+
+### [Meat Internal Temperature Guide — USDA Safe Temps Checker](https://sadiyaqeen92639572-cloud.github.io/meat-internal-temperature-guide/)
+
+Interactive doneness checker based on USDA and FSA safe internal temperature thresholds. Enter your thermometer reading for beef, lamb, pork, chicken or gammon — get instant doneness level, food safety status and resting time guidance. Full reference table covering rare through well done + carryover cooking formulas.
+
+Powered by [cookingmeatcalculator.com](https://cookingmeatcalculator.com)
 
 ## Features
 
