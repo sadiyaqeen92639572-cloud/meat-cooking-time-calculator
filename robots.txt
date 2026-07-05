@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://meat-cooking-time-calculator.github.io/sitemap.xml

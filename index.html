@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meat Cooking Time Calculator — Roast Beef, Lamb, Pork &amp; Chicken by Weight</title>
+<meta name="description" content="Free meat cooking time calculator. Choose beef, lamb, pork or chicken, enter the weight and doneness → exact roasting time, oven temperature (°C &amp; °F), internal temperature and resting time.">
+<meta name="keywords" content="meat cooking time calculator, cooking time calculator, calculator for cooking meat, meat cooking times calculator, calculate meat cooking time, meat roasting time calculator, cooking time calculator by weight, cooking calculator for beef">
+<link rel="canonical" href="https://cookingmeatcalculator.com/">
+<meta property="og:title" content="Meat Cooking Time Calculator — Perfect Roast Every Time">
+<meta property="og:description" content="Choose your meat, enter the weight → exact cooking time, oven temperature and internal target temperature. Free, instant, °C &amp; °F.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cookingmeatcalculator.com/">
+<meta property="og:image" content="https://cookingmeatcalculator.com/og-image.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://cookingmeatcalculator.com/og-image.svg">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Meat Cooking Time Calculator",
+      "url": "https://cookingmeatcalculator.com/",
+      "description": "Free meat roasting time calculator for beef, lamb, pork, chicken and gammon. Enter weight and doneness for exact cooking time, oven temperature and internal target temperature.",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Any",
+      "inLanguage": "en-GB",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" }
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to calculate meat cooking time",
+      "step": [
+        { "@type": "HowToStep", "position": 1, "name": "Choose your meat and cut", "text": "Select beef, lamb, pork, chicken or gammon." },
+        { "@type": "HowToStep", "position": 2, "name": "Enter the weight", "text": "Enter the weight of the joint in kilograms and choose your oven type." },
+        { "@type": "HowToStep", "position": 3, "name": "Choose doneness", "text": "For beef and lamb, choose rare, medium or well done." },
+        { "@type": "HowToStep", "position": 4, "name": "Read the result", "text": "See the total cooking time, oven temperature, internal target temperature and resting time." }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "How do I calculate meat cooking time by weight?", "acceptedAnswer": { "@type": "Answer", "text": "Multiply the minutes per 500 g for your meat and doneness by the weight, then add the base offset. For example, medium roast beef is 25 minutes per 500 g plus 25 minutes, so a 2 kg joint takes about 2 hours 5 minutes at 180°C fan. Always confirm with a meat thermometer." } },
+        { "@type": "Question", "name": "What internal temperature should meat reach?", "acceptedAnswer": { "@type": "Answer", "text": "Beef and lamb: 52°C rare, 60°C medium, 70°C well done. Pork: 71°C. Chicken: 74°C. Gammon: 68°C. Measure the thickest part with a meat thermometer." } },
+        { "@type": "Question", "name": "Do fan ovens cook meat faster than conventional?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. A fan (convection) oven runs about 20°C hotter than a conventional oven, so set it 20°C lower for the same cooking time. This calculator lets you choose fan or conventional." } },
+        { "@type": "Question", "name": "How long should meat rest after roasting?", "acceptedAnswer": { "@type": "Answer", "text": "Rest small cuts 8–10 minutes and large joints 15–30 minutes, loosely covered with foil. Resting lets the juices redistribute so the meat stays moist when carved." } }
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --brand:#b3541e; --brand-dark:#7a3410; --brand-light:#fbeee4; --accent:#c0392b; --text:#241a12; --muted:#7a6a5c; --border:#eaded3; --bg:#faf6f1; --radius:12px; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:var(--text); background:var(--bg); font-size:16px; line-height:1.65; }
+header { background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 100%); color:#fff; padding:52px 20px 88px; text-align:center; }
+header .badge { display:inline-block; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:4px 14px; font-size:.78rem; font-weight:600; letter-spacing:.4px; margin-bottom:16px; }
+header h1 { font-size:clamp(1.5rem,4vw,2.2rem); font-weight:800; margin-bottom:12px; }
+header p { color:rgba(255,255,255,.92); font-size:1rem; max-width:600px; margin:0 auto; }
+.container { max-width:840px; margin:0 auto; padding:0 20px; }
+.tool-wrapper { margin:-56px auto 48px; }
+.tool-card { background:#fff; border-radius:var(--radius); box-shadow:0 8px 40px rgba(122,52,16,.14); border:1px solid var(--border); padding:32px 28px; }
+@media (max-width:580px){ .tool-card{ padding:22px 16px; } }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:580px){ .form-grid{ grid-template-columns:1fr; } }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group.full { grid-column:1 / -1; }
+label { font-size:.79rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+select, input[type=number] { border:2px solid var(--border); border-radius:8px; padding:12px 14px; font-size:1rem; color:var(--text); background:#fff; width:100%; }
+select:focus, input[type=number]:focus { outline:none; border-color:var(--brand); }
+.seg { display:flex; gap:8px; flex-wrap:wrap; }
+.seg button { flex:1; min-width:70px; padding:10px 8px; border:2px solid var(--border); background:#fff; border-radius:8px; font-size:.9rem; font-weight:600; cursor:pointer; color:var(--text); }
+.seg button.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+.calc-btn { width:100%; margin-top:22px; padding:17px; background:var(--brand); color:#fff; border:none; border-radius:10px; font-size:1.08rem; font-weight:700; cursor:pointer; letter-spacing:.2px; }
+.calc-btn:hover { background:var(--brand-dark); }
+.result { display:none; margin-top:26px; }
+.result-hero { background:linear-gradient(135deg,var(--brand-dark),var(--brand)); border-radius:10px; padding:26px; color:#fff; text-align:center; margin-bottom:14px; }
+.result-hero .rl { font-size:.76rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; opacity:.85; margin-bottom:4px; }
+.result-hero .ra { font-size:2.5rem; font-weight:900; line-height:1.1; }
+.result-hero .rs { font-size:.9rem; opacity:.9; margin-top:6px; }
+.result-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+@media (max-width:480px){ .result-grid{ grid-template-columns:1fr 1fr; } }
+.r-stat { background:var(--brand-light); border-radius:8px; padding:14px; text-align:center; }
+.r-stat .sv { font-size:1.2rem; font-weight:800; color:var(--brand-dark); }
+.r-stat .sl { font-size:.72rem; color:var(--muted); margin-top:2px; }
+.therm-notice { background:#fff8ec; border:1px solid #f4d999; border-radius:8px; padding:11px 14px; font-size:.82rem; color:#7a4a10; }
+.content { padding-bottom:64px; }
+h2.st { font-size:1.3rem; font-weight:800; margin:48px 0 16px; }
+h3.sub { font-size:1rem; font-weight:700; margin:24px 0 10px; }
+p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
+.data-table { width:100%; border-collapse:collapse; margin:18px 0; font-size:.88rem; }
+.data-table th { background:var(--brand); color:#fff; padding:10px 14px; text-align:left; font-weight:600; }
+.data-table td { padding:10px 14px; border-bottom:1px solid var(--border); }
+.data-table tr:nth-child(even) td { background:#fdf8f3; }
+.hl { font-weight:700; color:var(--brand-dark); }
+.link-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin:18px 0; }
+.link-card { display:block; background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 16px; text-decoration:none; color:var(--text); }
+.link-card:hover { border-color:var(--brand); }
+.link-card .t { font-weight:700; font-size:.92rem; margin-bottom:3px; }
+.link-card .sub { font-size:.76rem; color:var(--muted); }
+.cta-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:44px 0; }
+@media (max-width:580px){ .cta-grid{ grid-template-columns:1fr; } }
+.cta-card { background:var(--brand-dark); color:#fff; border-radius:var(--radius); padding:26px 22px; }
+.cta-card h3 { color:#fff; font-size:1.05rem; margin-bottom:10px; }
+.cta-card p { color:rgba(255,255,255,.88); font-size:.86rem; margin-bottom:16px; }
+.cta-btn-white { display:block; background:#fff; color:var(--brand-dark); text-align:center; text-decoration:none; padding:12px 18px; border-radius:8px; font-weight:700; font-size:.9rem; }
+.cta-btn-gold { display:block; background:#f0a020; color:#241a12; text-align:center; text-decoration:none; padding:12px 18px; border-radius:8px; font-weight:700; font-size:.9rem; }
+.method { background:#fff; border:1px solid var(--border); border-radius:12px; padding:26px 26px 18px; margin:0 0 36px; font-size:.9rem; }
+.method .code { background:#2c1c10; color:#f2e3d5; border-radius:8px; padding:16px 18px; font-family:'Courier New',monospace; font-size:.82rem; line-height:1.9; margin:14px 0; overflow-x:auto; }
+.method .code .k { color:#f5b971; }
+.method .code .c { color:#9db98c; }
+.faq-item { border-bottom:1px solid var(--border); }
+.faq-q { width:100%; background:none; border:none; text-align:left; padding:17px 0; font-size:.92rem; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:var(--text); }
+.faq-q::after { content:'+'; font-size:1.3rem; color:var(--brand); flex-shrink:0; margin-left:12px; }
+.faq-q.open::after { content:'−'; }
+.faq-a { display:none; padding:0 0 16px; font-size:.88rem; color:#4b3a2c; line-height:1.75; }
+.faq-a.open { display:block; }
+.adslot { border:1px dashed var(--border); border-radius:8px; padding:18px; text-align:center; color:#b3a595; font-size:.78rem; margin:32px 0; }
+footer { background:#2c1c10; color:#c9b7a6; text-align:center; padding:30px 20px; font-size:.8rem; }
+footer p { color:#c9b7a6; }
+footer a { color:#e9d8c6; }
+.disc { background:#3a2818; border-radius:8px; padding:13px 18px; margin-bottom:16px; font-size:.78rem; color:#c9b7a6; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="badge">🍖 Beef · Lamb · Pork · Chicken · Gammon</div>
+    <h1>Meat Cooking Time Calculator</h1>
+    <p>Choose your meat, enter the weight and doneness — get the exact roasting time, oven temperature (°C &amp; °F), internal target temperature and resting time.</p>
+  </div>
+</header>
+
+<div class="container">
+<div class="tool-wrapper">
+  <div class="tool-card">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Meat</label>
+        <select id="meat" onchange="onMeatChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>Weight (kg)</label>
+        <input type="number" id="wNum" min="0.2" max="12" step="0.1" value="2" placeholder="e.g. 2">
+      </div>
+      <div class="form-group">
+        <label>Oven type</label>
+        <select id="ovenType"><option value="fan">Fan / convection</option><option value="conv">Conventional</option></select>
+      </div>
+      <div class="form-group" id="doneWrap">
+        <label>Doneness</label>
+        <div class="seg" id="doneSeg"></div>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calculate()">Calculate Cooking Time →</button>
+
+    <div class="result" id="result">
+      <div class="result-hero">
+        <div class="rl">Total cooking time</div>
+        <div class="ra" id="r-time"></div>
+        <div class="rs" id="r-sub"></div>
+      </div>
+      <div class="result-grid">
+        <div class="r-stat"><div class="sv" id="r-oven"></div><div class="sl">Oven temperature</div></div>
+        <div class="r-stat"><div class="sv" id="r-internal"></div><div class="sl">Internal target</div></div>
+        <div class="r-stat"><div class="sv" id="r-rest"></div><div class="sl">Resting time</div></div>
+      </div>
+      <div class="result-grid" style="margin-bottom:14px;">
+        <div class="r-stat"><div class="sv" id="r-range"></div><div class="sl">Guidance range</div></div>
+        <div class="r-stat"><div class="sv" id="r-ready"></div><div class="sl">Ready if in now</div></div>
+        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl">Per kg</div></div>
+      </div>
+      <div class="therm-notice">🌡️ <strong>Always confirm with a meat thermometer.</strong> Times are guidance — the internal temperature is what makes it safe and perfect.</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <h2 class="st">Choose Your Meat Calculator</h2>
+  <p>Dedicated calculators with cooking charts, cut variations and per-weight pages:</p>
+  <div class="link-grid">
+    <a class="link-card" href="/roast-beef-cooking-time-calculator/"><div class="t">🥩 Roast Beef</div><div class="sub">Rare · medium · well done, by weight</div></a>
+    <a class="link-card" href="/leg-of-lamb-cooking-time-calculator/"><div class="t">🐑 Leg of Lamb</div><div class="sub">Bone-in, boneless, slow-roast</div></a>
+    <a class="link-card" href="/roast-pork-cooking-time-calculator/"><div class="t">🐖 Roast Pork</div><div class="sub">Loin, shoulder, crackling, gammon</div></a>
+    <a class="link-card" href="/roast-chicken-cooking-time-calculator/"><div class="t">🐔 Roast Chicken</div><div class="sub">Whole, crown, spatchcock</div></a>
+  </div>
+
+  <h2 class="st">Meat Cooking Times at a Glance (per 500 g, fan oven)</h2>
+  <table class="data-table">
+    <thead><tr><th>Meat</th><th>Time per 500 g</th><th>Oven</th><th>Internal temp</th></tr></thead>
+    <tbody>
+      <tr><td class="hl">Beef (medium)</td><td>25 min + 25 min base</td><td>180°C fan</td><td>60°C</td></tr>
+      <tr><td class="hl">Lamb (medium)</td><td>25 min + 25 min base</td><td>180°C fan</td><td>60°C</td></tr>
+      <tr><td class="hl">Pork</td><td>30 min + 30 min base</td><td>180°C fan</td><td>71°C</td></tr>
+      <tr><td class="hl">Chicken</td><td>20 min + 20 min base</td><td>180°C fan</td><td>74°C</td></tr>
+      <tr><td class="hl">Gammon</td><td>20 min + 20 min base</td><td>180°C fan</td><td>68°C</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="st">Popular Cuts &amp; Guides</h2>
+  <div class="link-grid">
+    <a class="link-card" href="/beef-brisket-cooking-time-calculator/"><div class="t">Beef Brisket</div><div class="sub">Low &amp; slow calculator</div></a>
+    <a class="link-card" href="/gammon-cooking-times-calculator/"><div class="t">Gammon Cooking Times</div><div class="sub">Simmer or roast</div></a>
+    <a class="link-card" href="/pork-loin-cooking-time-calculator/"><div class="t">Pork Loin</div><div class="sub">Crackling method</div></a>
+    <a class="link-card" href="/boneless-leg-of-lamb-cooking-time-calculator/"><div class="t">Boneless Leg of Lamb</div><div class="sub">Rolled leg times</div></a>
+    <a class="link-card" href="/how-long-to-cook-chicken-breast-in-the-oven/"><div class="t">Chicken Breast in the Oven</div><div class="sub">Times by temperature</div></a>
+    <a class="link-card" href="/roast-chicken-internal-temperature/"><div class="t">Chicken Internal Temp</div><div class="sub">74°C safe guide</div></a>
+    <a class="link-card" href="/how-to-prepare-pork/"><div class="t">How to Prepare Pork</div><div class="sub">Crackling &amp; prep</div></a>
+    <a class="link-card" href="/how-long-to-cook-roast-potatoes/"><div class="t">Roast Potatoes</div><div class="sub">Timing &amp; crisp tips</div></a>
+    <a class="link-card" href="/roast-beef-cooking-time-chart/"><div class="t">Roast Beef Chart</div><div class="sub">All weights &amp; doneness</div></a>
+  </div>
+
+  <div class="cta-grid">
+    <div class="cta-card">
+      <h3>🌡️ Stop guessing — check the real temperature</h3>
+      <p>A fast digital meat thermometer is the only way to know your roast is safely and perfectly cooked. Pull it at the exact internal temperature, every time.</p>
+      <a href="https://www.amazon.co.uk/s?k=meat+thermometer&tag=YOURTAG-21" class="cta-btn-white" target="_blank" rel="noopener sponsored">See top meat thermometers →</a>
+    </div>
+    <div class="cta-card">
+      <h3>🍳 Roasting kit that gets results</h3>
+      <p>A heavy roasting tin, a leave-in probe and a sharp carving knife make a real difference to your Sunday roast.</p>
+      <a href="https://www.amazon.co.uk/s?k=roasting+tin+set&tag=YOURTAG-21" class="cta-btn-gold" target="_blank" rel="noopener sponsored">Shop roasting equipment →</a>
+    </div>
+  </div>
+  <div class="adslot">Advertisement</div>
+
+  <h2 class="st">How This Calculator Works — Formula &amp; Method</h2>
+  <div class="method">
+    <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard UK roasting guidance · applied deterministically · verify with a thermometer</p>
+    <table class="data-table">
+      <thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>Beef / lamb — min per 500 g</td><td class="hl">20 rare · 25 medium · 30 well</td><td>UK roasting guides</td></tr>
+        <tr><td>Pork — min per 500 g</td><td class="hl">30 min (range 30–35)</td><td>UK roasting guides</td></tr>
+        <tr><td>Chicken — min per 500 g</td><td class="hl">20 min + 20 min base</td><td>UK roasting guides</td></tr>
+        <tr><td>Internal targets</td><td class="hl">Beef/lamb 52/60/70°C · Pork 71°C · Chicken 74°C</td><td>FSA / thermometer</td></tr>
+        <tr><td>Fan vs conventional</td><td class="hl">Fan = conventional − 20°C</td><td>Oven standard</td></tr>
+        <tr><td>Resting</td><td class="hl">8–30 min by size</td><td>Best practice</td></tr>
+      </tbody>
+    </table>
+    <div class="code">
+<span class="c">— cooking time formula —</span><br>
+<span class="k">total_min</span> = min_per_500g × (weight_g / 500) + base_offset<br>
+<span class="k">range</span>     = [lo_per_500g … hi_per_500g] × (weight_g / 500) + base_offset<br>
+<span class="k">conventional_oven</span> = fan_temp + 20°C (same time)<br>
+<span class="c">— algorithm —</span><br>
+lookup(meat, doneness) → point_estimate → guidance_range<br>
+→ internal_target_temp → <span class="k">verify_with_thermometer()</span>
+    </div>
+    <p style="font-size:.78rem;color:var(--muted);margin:0;">Public roasting guidance applied deterministically — this is not a food-safety authority. Always cook to the stated internal temperature, measured with a meat thermometer.</p>
+  </div>
+
+  <h2 class="st">Frequently Asked Questions</h2>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">How do I calculate meat cooking time by weight?</button>
+    <div class="faq-a">Multiply the minutes per 500 g for your meat and doneness by the weight, then add the base offset. For example, medium roast beef is 25 minutes per 500 g plus 25 minutes, so a 2 kg joint takes about <strong>2 hours 5 minutes</strong> at 180°C fan. Always confirm with a meat thermometer.</div></div>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What internal temperature should meat reach?</button>
+    <div class="faq-a">Beef and lamb: <strong>52°C rare, 60°C medium, 70°C well done</strong>. Pork: <strong>71°C</strong>. Chicken: <strong>74°C</strong>. Gammon: <strong>68°C</strong>. Measure the thickest part with a meat thermometer.</div></div>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Do fan ovens cook meat faster than conventional?</button>
+    <div class="faq-a">Yes. A fan (convection) oven runs about 20°C hotter than a conventional oven, so set it 20°C lower for the same cooking time. This calculator lets you choose fan or conventional.</div></div>
+  <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">How long should meat rest after roasting?</button>
+    <div class="faq-a">Rest small cuts 8–10 minutes and large joints 15–30 minutes, loosely covered with foil. Resting lets the juices redistribute so the meat stays moist when carved.</div></div>
+
+</div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="disc">Cooking times are guidance compiled from standard UK roasting guides and applied deterministically — not a food-safety authority. Always cook meat to a safe internal temperature, checked with a meat thermometer.</div>
+    <p>Meat Cooking Time Calculator · Beef · Lamb · Pork · Chicken · Gammon</p>
+  </div>
+</footer>
+
+<script>
+// Shared cooking model (mirror of generate-pages.js MEATS)
+const MEATS = {
+  beef:    { label:'Beef', mode:'doneness', ovenC:180, ovenConvC:200, ovenF:350, restMin:15,
+    doneness:{ rare:{label:'Rare',per500:20,base:20,range:[15,20],internalC:52,internalF:126}, medium:{label:'Medium',per500:25,base:25,range:[20,25],internalC:60,internalF:140}, well:{label:'Well done',per500:30,base:30,range:[25,30],internalC:70,internalF:158} }, defaultDoneness:'medium' },
+  lamb:    { label:'Lamb', mode:'doneness', ovenC:180, ovenConvC:200, ovenF:350, restMin:15,
+    doneness:{ rare:{label:'Pink / rare',per500:20,base:20,range:[15,20],internalC:55,internalF:131}, medium:{label:'Medium',per500:25,base:25,range:[20,25],internalC:60,internalF:140}, well:{label:'Well done',per500:30,base:30,range:[25,30],internalC:70,internalF:158} }, defaultDoneness:'medium' },
+  pork:    { label:'Pork', mode:'single', ovenC:180, ovenConvC:200, ovenF:350, restMin:15,
+    single:{label:'Cooked through',per500:30,base:30,range:[30,35],internalC:71,internalF:160} },
+  chicken: { label:'Chicken', mode:'single', ovenC:180, ovenConvC:200, ovenF:375, restMin:15,
+    single:{label:'Cooked through',per500:20,base:20,range:[18,22],internalC:74,internalF:165} },
+  gammon:  { label:'Gammon', mode:'single', ovenC:180, ovenConvC:200, ovenF:350, restMin:15,
+    single:{label:'Cooked through',per500:20,base:20,range:[18,22],internalC:68,internalF:154} },
+};
+let DONE = 'medium';
+
+// populate meat select
+const meatSel = document.getElementById('meat');
+Object.keys(MEATS).forEach(k => { const o=document.createElement('option'); o.value=k; o.textContent=MEATS[k].label; meatSel.appendChild(o); });
+
+function onMeatChange(){
+  const m = MEATS[meatSel.value];
+  const wrap = document.getElementById('doneWrap');
+  const seg = document.getElementById('doneSeg');
+  if(m.mode==='doneness'){
+    wrap.style.display='flex';
+    seg.innerHTML = Object.keys(m.doneness).map(k=>`<button type="button" data-done="${k}"${k===m.defaultDoneness?' class="active"':''} onclick="pickDone(this)">${m.doneness[k].label}</button>`).join('');
+    DONE = m.defaultDoneness;
+  } else {
+    wrap.style.display='none';
+  }
+}
+function pickDone(b){ document.querySelectorAll('#doneSeg button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); DONE=b.dataset.done; }
+function fmtTime(min){ min=Math.round(min); const h=Math.floor(min/60), m=min%60; if(h===0)return m+' min'; if(m===0)return h+' hr'; return h+' hr '+m+' min'; }
+
+function calculate(){
+  const m = MEATS[meatSel.value];
+  const kg = parseFloat(document.getElementById('wNum').value)||0;
+  if(kg<=0){ alert('Please enter a weight in kg.'); return; }
+  const oven = document.getElementById('ovenType').value;
+  const d = m.mode==='doneness' ? m.doneness[DONE] : m.single;
+  const mid = d.per500*(kg*2)+d.base;
+  const lo = d.range[0]*(kg*2)+d.base, hi = d.range[1]*(kg*2)+d.base;
+  const ovenC = oven==='conv' ? m.ovenConvC : m.ovenC;
+  const ovenF = Math.round((ovenC*9/5+32)/5)*5;
+  document.getElementById('r-time').textContent = fmtTime(mid);
+  document.getElementById('r-sub').textContent = (m.mode==='doneness'? d.label+' · ':'') + m.label+' · '+kg+' kg · '+(oven==='conv'?'conventional':'fan')+' oven';
+  document.getElementById('r-oven').textContent = ovenC+'°C / '+ovenF+'°F';
+  document.getElementById('r-internal').textContent = d.internalC+'°C / '+d.internalF+'°F';
+  document.getElementById('r-rest').textContent = m.restMin+' min';
+  document.getElementById('r-range').textContent = fmtTime(lo)+' – '+fmtTime(hi);
+  document.getElementById('r-perkg').textContent = fmtTime(d.per500*2)+'/kg';
+  const ready = new Date(Date.now()+mid*60000);
+  document.getElementById('r-ready').textContent = ready.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  document.getElementById('result').style.display='block';
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function toggleFaq(b){ b.classList.toggle('open'); b.nextElementSibling.classList.toggle('open'); }
+onMeatChange();
+</script>
+</body>
+</html>
