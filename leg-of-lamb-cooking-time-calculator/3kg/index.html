@@ -180,7 +180,7 @@ footer a { color:#e9d8c6; }
       <div class="result-grid" style="margin-bottom:14px;">
         <div class="r-stat"><div class="sv" id="r-range"></div><div class="sl">Guidance range</div></div>
         <div class="r-stat"><div class="sv" id="r-ready"></div><div class="sl">Ready if in now</div></div>
-        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl">Per kg</div></div>
+        <div class="r-stat"><div class="sv" id="r-perkg"></div><div class="sl" id="r-perkg-label">Per kg</div></div>
       </div>
       <div class="therm-notice">🌡️ <strong>Always confirm with a meat thermometer.</strong> Times are guidance — the internal temperature is what makes it safe and perfect.</div>
     </div>
@@ -188,24 +188,48 @@ footer a { color:#e9d8c6; }
   <script>
   const PAGE = {"mode":"doneness","doneness":{"rare":{"label":"Pink / rare","per500":20,"base":20,"range":[15,20],"internalC":55,"internalF":131},"medium":{"label":"Medium","per500":25,"base":25,"range":[20,25],"internalC":60,"internalF":140},"well":{"label":"Well done","per500":30,"base":30,"range":[25,30],"internalC":70,"internalF":158}},"single":null,"ovenC":180,"ovenConvC":190,"ovenF":350,"restMin":15,"defaultDoneness":"medium","fixedWeight":3};
   let DONE = PAGE.defaultDoneness;
+  const LB_PER_KG = 2.20462;
+  let WEIGHT_UNIT = 'kg';
+  function setUnit(unit){
+    if(unit===WEIGHT_UNIT) return;
+    const input = document.getElementById('wNum');
+    const val = parseFloat(input.value)||0;
+    if(unit==='lbs') input.value = Math.round(val*LB_PER_KG*10)/10;
+    else input.value = Math.round((val/LB_PER_KG)*10)/10;
+    WEIGHT_UNIT = unit;
+    document.querySelectorAll('#unitSeg button').forEach(b=>b.classList.toggle('active', b.dataset.unit===unit));
+    const lbl = document.getElementById('wLabel');
+    if(lbl) lbl.textContent = 'Weight ('+unit+')';
+    input.min = unit==='lbs' ? 0.5 : 0.2;
+    input.max = unit==='lbs' ? 26 : 12;
+    input.placeholder = unit==='lbs' ? 'e.g. 4.5' : 'e.g. 2';
+  }
   function pickDone(b){ document.querySelectorAll('#doneSeg button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); DONE = b.dataset.done; }
   function fmtTime(min){ min=Math.round(min); const h=Math.floor(min/60), m=min%60; if(h===0)return m+' min'; if(m===0)return h+' hr'; return h+' hr '+m+' min'; }
   function calculate(){
-    const kg = parseFloat(document.getElementById('wNum').value)||0;
-    if(kg<=0){ alert('Please enter a weight in kg.'); return; }
+    const wRaw = parseFloat(document.getElementById('wNum').value)||0;
+    if(wRaw<=0){ alert('Please enter a weight in '+WEIGHT_UNIT+'.'); return; }
+    const kg = WEIGHT_UNIT==='lbs' ? wRaw/LB_PER_KG : wRaw;
     const oven = (document.getElementById('ovenType')||{}).value || 'fan';
     const d = PAGE.mode==='doneness' ? PAGE.doneness[DONE] : PAGE.single;
     const mid = d.per500*(kg*2)+d.base;
     const lo = d.range[0]*(kg*2)+d.base, hi = d.range[1]*(kg*2)+d.base;
     const ovenC = oven==='conv' ? PAGE.ovenConvC : PAGE.ovenC;
     const ovenF = Math.round((ovenC*9/5+32)/5)*5;
+    const wLabel = WEIGHT_UNIT==='lbs' ? wRaw+' lbs' : kg+' kg';
     document.getElementById('r-time').textContent = fmtTime(mid);
-    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + kg+' kg · '+(oven==='conv'?'conventional':'fan')+' oven';
+    document.getElementById('r-sub').textContent = (PAGE.mode==='doneness'? d.label+' · ' : '') + wLabel+' · '+(oven==='conv'?'conventional':'fan')+' oven';
     document.getElementById('r-oven').textContent = ovenC+'°C / '+ovenF+'°F';
     document.getElementById('r-internal').textContent = d.internalC+'°C / '+d.internalF+'°F';
     document.getElementById('r-rest').textContent = PAGE.restMin+' min';
     document.getElementById('r-range').textContent = fmtTime(lo)+' – '+fmtTime(hi);
-    document.getElementById('r-perkg').textContent = fmtTime(d.per500*2)+'/kg';
+    if(WEIGHT_UNIT==='lbs'){
+      document.getElementById('r-perkg').textContent = fmtTime((d.per500*2)/LB_PER_KG)+'/lb';
+      document.getElementById('r-perkg-label').textContent = 'Per lb';
+    } else {
+      document.getElementById('r-perkg').textContent = fmtTime(d.per500*2)+'/kg';
+      document.getElementById('r-perkg-label').textContent = 'Per kg';
+    }
     const ready = new Date(Date.now()+mid*60000);
     document.getElementById('r-ready').textContent = ready.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     document.getElementById('result').style.display='block';
