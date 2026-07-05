@@ -362,9 +362,8 @@ try{
     var wantUS;
     if(pref){ wantUS=(pref==='us'); }
     else {
-      var lang=(navigator.language||'').toLowerCase();
       var tz=''; try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      wantUS=(lang==='en-us')|| /^America\//.test(tz);
+      wantUS=/^America\/(New_York|Detroit|Chicago|Denver|Boise|Phoenix|Los_Angeles|Anchorage|Juneau|Sitka|Nome|Adak|Menominee|Indiana|Kentucky|North_Dakota)/.test(tz)||tz==='Pacific/Honolulu';
     }
     if(wantUS&&!isUS){ location.replace('/us/'); }
   }
