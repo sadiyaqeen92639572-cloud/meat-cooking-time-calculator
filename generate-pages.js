@@ -719,6 +719,8 @@ function pageShell({ title, desc, keywords, canonical, jsonld, body, loc }) {
 <meta name="description" content="${esc(desc)}">
 <meta name="keywords" content="${esc(keywords)}">
 <link rel="canonical" href="${canonical}">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:type" content="website">
