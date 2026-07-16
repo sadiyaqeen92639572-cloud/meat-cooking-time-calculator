@@ -137,6 +137,12 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
 .method .code { background:#2c1c10; color:#f2e3d5; border-radius:8px; padding:16px 18px; font-family:'Courier New',monospace; font-size:.82rem; line-height:1.9; margin:14px 0; overflow-x:auto; }
 .method .code .k { color:#f5b971; }
 .method .code .c { color:#9db98c; }
+@media (max-width:640px){
+  .method { padding:16px 14px 12px; }
+  .data-table { display:block; overflow-x:auto; white-space:nowrap; max-width:100%; font-size:.8rem; }
+  .data-table thead, .data-table tbody { display:table; width:100%; }
+  .method .code { padding:12px 14px; line-height:1.6; }
+}
 .faq-item { border-bottom:1px solid var(--border); }
 .faq-q { width:100%; background:none; border:none; text-align:left; padding:17px 0; font-size:.92rem; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:var(--text); }
 .faq-q::after { content:'+'; font-size:1.3rem; color:var(--brand); flex-shrink:0; margin-left:12px; }
