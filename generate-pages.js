@@ -464,10 +464,11 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
 .method .code { background:#2c1c10; color:#f2e3d5; border-radius:8px; padding:16px 18px; font-family:'Courier New',monospace; font-size:.82rem; line-height:1.9; margin:14px 0; overflow-x:auto; }
 .method .code .k { color:#f5b971; }
 .method .code .c { color:#9db98c; }
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:18px 0; }
+.table-scroll .data-table { margin:0; }
 @media (max-width:640px){
   .method { padding:16px 14px 12px; }
-  .data-table { display:block; overflow-x:auto; white-space:nowrap; max-width:100%; font-size:.8rem; }
-  .data-table thead, .data-table tbody { display:table; width:100%; }
+  .table-scroll .data-table { font-size:.8rem; white-space:nowrap; }
   .method .code { padding:12px 14px; line-height:1.6; }
 }
 .faq-item { border-bottom:1px solid var(--border); }
@@ -624,9 +625,9 @@ function methodBlock(cfg, label, loc) {
   <h2 class="st">How This Calculator Works — Formula &amp; Method</h2>
   <div class="method">
     <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard ${loc.region} roasting guidance · applied deterministically · verify with a thermometer</p>
-    <table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
+    <div class="table-scroll"><table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
       ${rows.map(r => `<tr><td>${esc(r[0])}</td><td class="hl">${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}
-    </tbody></table>
+    </tbody></table></div>
     <div class="code">
 <span class="c">— ${esc(label)} cooking time —</span><br>
 <span class="k">total_min</span> = min_per_500g × (${weightExpr} / 500) + base_offset<br>
@@ -836,7 +837,7 @@ function buildLocale(loc) {
   <a href="${homeHref}" class="back-link">← All meat calculators</a>
   <h2 class="st">${esc(m.label)} Cooking Time Chart (by weight)</h2>
   <p>${m.note}</p>
-  <table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${chartRows}</tbody></table>
+  <div class="table-scroll"><table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${chartRows}</tbody></table></div>
   <h2 class="st">${esc(m.label)} Cooking Times by Weight</h2>
   <p>Jump to a pre-filled calculator for your exact joint size:</p>
   <div class="link-grid">${weightLinksFor(hub.key, m.slug, loc)}</div>
@@ -884,11 +885,11 @@ ${footerBlock(`${esc(m.label)} cooking time calculator · <a href="${homeHref}">
 <div class="content">
   <a href="/${loc.prefix}${m.slug}/" class="back-link">← ${esc(m.label)} calculator</a>
   <h2 class="st">Cooking Times for a ${w}${loc.unit} ${esc(Dish)}</h2>
-  <table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>
+  <div class="table-scroll"><table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>
   ${m.mode === 'doneness'
           ? `<tr><td class="hl">${w} ${loc.unit}</td>${Object.keys(m.doneness).map(k => `<td>${fmtTime(total(m.doneness[k].per500, m.doneness[k].base, kg))}</td>`).join('')}</tr>`
           : `<tr><td class="hl">${w} ${loc.unit}</td><td>${wtimeMain}</td><td>${internalPrimary(m.single.internalC, m.single.internalF, loc)}</td></tr>`}
-  </tbody></table>
+  </tbody></table></div>
   ${ctaBlock(loc)}
   <h2 class="st">Other Weights</h2>
   <div class="link-grid">${weightLinksFor(hub.key, m.slug, loc, w)}</div>
@@ -939,7 +940,7 @@ ${footerBlock(`${w} ${loc.unit} ${esc(m.label)} · <a href="/${loc.prefix}${m.sl
 <div class="content">
   <a href="/${loc.prefix}${MEATS[entry.meat].slug}/" class="back-link">← ${esc(MEATS[entry.meat].label)} calculator</a>
   <h2 class="st">${esc(entry.cut)} Cooking Time Chart</h2>
-  <table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${chartRows}</tbody></table>
+  <div class="table-scroll"><table class="data-table"><thead><tr>${chartHead.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${chartRows}</tbody></table></div>
   ${ctaBlock(loc)}
   ${methodBlock(cfg, entry.cut, loc)}
   ${faqBlock(faq)}
@@ -1025,7 +1026,7 @@ function buildHomepage(loc) {
   <div class="link-grid">${hubGrid}</div>
 
   <h2 class="st">Meat Cooking Times at a Glance (per pound, convection)</h2>
-  <table class="data-table"><thead><tr><th>Meat</th><th>Time per pound</th><th>Oven</th><th>Internal temp</th></tr></thead><tbody>${glanceRows}</tbody></table>
+  <div class="table-scroll"><table class="data-table"><thead><tr><th>Meat</th><th>Time per pound</th><th>Oven</th><th>Internal temp</th></tr></thead><tbody>${glanceRows}</tbody></table></div>
 
   ${ctaBlock(loc)}
   ${faqBlock(faq)}
@@ -1086,7 +1087,7 @@ INFO.forEach(info => {
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
       { '@type': 'ListItem', position: 2, name: info.h1, item: canonical }] }];
   const tbl = info.table
-    ? `<h2 class="st">${esc(info.table.title)}</h2><table class="data-table"><thead><tr>${info.table.head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${info.table.rows.map(r => `<tr>${r.map((c, i) => i === 0 ? `<td class="hl">${esc(c)}</td>` : `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+    ? `<h2 class="st">${esc(info.table.title)}</h2><div class="table-scroll"><table class="data-table"><thead><tr>${info.table.head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${info.table.rows.map(r => `<tr>${r.map((c, i) => i === 0 ? `<td class="hl">${esc(c)}</td>` : `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
     : '';
   const body = `
 <header><div class="container">

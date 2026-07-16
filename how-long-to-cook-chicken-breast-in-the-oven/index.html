@@ -137,10 +137,11 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
 .method .code { background:#2c1c10; color:#f2e3d5; border-radius:8px; padding:16px 18px; font-family:'Courier New',monospace; font-size:.82rem; line-height:1.9; margin:14px 0; overflow-x:auto; }
 .method .code .k { color:#f5b971; }
 .method .code .c { color:#9db98c; }
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:18px 0; }
+.table-scroll .data-table { margin:0; }
 @media (max-width:640px){
   .method { padding:16px 14px 12px; }
-  .data-table { display:block; overflow-x:auto; white-space:nowrap; max-width:100%; font-size:.8rem; }
-  .data-table thead, .data-table tbody { display:table; width:100%; }
+  .table-scroll .data-table { font-size:.8rem; white-space:nowrap; }
   .method .code { padding:12px 14px; line-height:1.6; }
 }
 .faq-item { border-bottom:1px solid var(--border); }
@@ -174,7 +175,7 @@ footer a { color:#e9d8c6; }
   <a href="/roast-chicken-cooking-time-calculator/" class="cta-btn-white" style="background:var(--brand);color:#fff;margin-top:18px;">Open the Roast Chicken Calculator →</a>
 </div></div>
 <div class="content">
-  <h2 class="st">Chicken breast oven times by temperature</h2><table class="data-table"><thead><tr><th>Oven temp</th><th>Boneless breast (~180 g)</th><th>Bone-in breast</th></tr></thead><tbody><tr><td class="hl">160°C / 325°F</td><td>30–35 min</td><td>40–45 min</td></tr><tr><td class="hl">180°C / 350°F (fan 160°C)</td><td>22–26 min</td><td>30–35 min</td></tr><tr><td class="hl">200°C / 400°F (fan 180°C)</td><td>18–22 min</td><td>25–30 min</td></tr><tr><td class="hl">220°C / 425°F</td><td>15–18 min</td><td>22–26 min</td></tr></tbody></table>
+  <h2 class="st">Chicken breast oven times by temperature</h2><div class="table-scroll"><table class="data-table"><thead><tr><th>Oven temp</th><th>Boneless breast (~180 g)</th><th>Bone-in breast</th></tr></thead><tbody><tr><td class="hl">160°C / 325°F</td><td>30–35 min</td><td>40–45 min</td></tr><tr><td class="hl">180°C / 350°F (fan 160°C)</td><td>22–26 min</td><td>30–35 min</td></tr><tr><td class="hl">200°C / 400°F (fan 180°C)</td><td>18–22 min</td><td>25–30 min</td></tr><tr><td class="hl">220°C / 425°F</td><td>15–18 min</td><td>22–26 min</td></tr></tbody></table></div>
   <div class="therm-notice" style="margin:20px 0;">🌡️ Whatever the time, doneness is decided by the <strong>internal temperature</strong> — check it with a meat thermometer.</div>
   
   <div class="cta-grid">

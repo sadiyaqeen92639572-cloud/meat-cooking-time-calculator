@@ -172,10 +172,11 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
 .method .code { background:#2c1c10; color:#f2e3d5; border-radius:8px; padding:16px 18px; font-family:'Courier New',monospace; font-size:.82rem; line-height:1.9; margin:14px 0; overflow-x:auto; }
 .method .code .k { color:#f5b971; }
 .method .code .c { color:#9db98c; }
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:18px 0; }
+.table-scroll .data-table { margin:0; }
 @media (max-width:640px){
   .method { padding:16px 14px 12px; }
-  .data-table { display:block; overflow-x:auto; white-space:nowrap; max-width:100%; font-size:.8rem; }
-  .data-table thead, .data-table tbody { display:table; width:100%; }
+  .table-scroll .data-table { font-size:.8rem; white-space:nowrap; }
   .method .code { padding:12px 14px; line-height:1.6; }
 }
 .faq-item { border-bottom:1px solid var(--border); }
@@ -236,7 +237,7 @@ footer a { color:#e9d8c6; }
   <div class="link-grid"><a class="link-card" href="/us/roast-beef-cooking-time-calculator/"><div class="t">🥩 Roast Beef</div><div class="sub">by weight, °F</div></a><a class="link-card" href="/us/leg-of-lamb-cooking-time-calculator/"><div class="t">🐑 Leg of Lamb</div><div class="sub">by weight, °F</div></a><a class="link-card" href="/us/roast-pork-cooking-time-calculator/"><div class="t">🐖 Roast Pork</div><div class="sub">by weight, °F</div></a><a class="link-card" href="/us/roast-chicken-cooking-time-calculator/"><div class="t">🐔 Roast Chicken</div><div class="sub">by weight, °F</div></a></div>
 
   <h2 class="st">Meat Cooking Times at a Glance (per pound, convection)</h2>
-  <table class="data-table"><thead><tr><th>Meat</th><th>Time per pound</th><th>Oven</th><th>Internal temp</th></tr></thead><tbody><tr><td class="hl">Beef (medium)</td><td>23 min/lb + 25 min base</td><td>350°F</td><td>140°F</td></tr><tr><td class="hl">Lamb (medium)</td><td>23 min/lb + 25 min base</td><td>350°F</td><td>140°F</td></tr><tr><td class="hl">Pork</td><td>27 min/lb + 30 min base</td><td>350°F</td><td>160°F</td></tr><tr><td class="hl">Chicken</td><td>18 min/lb + 20 min base</td><td>375°F</td><td>165°F</td></tr><tr><td class="hl">Gammon</td><td>18 min/lb + 20 min base</td><td>350°F</td><td>154°F</td></tr></tbody></table>
+  <div class="table-scroll"><table class="data-table"><thead><tr><th>Meat</th><th>Time per pound</th><th>Oven</th><th>Internal temp</th></tr></thead><tbody><tr><td class="hl">Beef (medium)</td><td>23 min/lb + 25 min base</td><td>350°F</td><td>140°F</td></tr><tr><td class="hl">Lamb (medium)</td><td>23 min/lb + 25 min base</td><td>350°F</td><td>140°F</td></tr><tr><td class="hl">Pork</td><td>27 min/lb + 30 min base</td><td>350°F</td><td>160°F</td></tr><tr><td class="hl">Chicken</td><td>18 min/lb + 20 min base</td><td>375°F</td><td>165°F</td></tr><tr><td class="hl">Gammon</td><td>18 min/lb + 20 min base</td><td>350°F</td><td>154°F</td></tr></tbody></table></div>
 
   
   <div class="cta-grid">

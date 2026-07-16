@@ -138,10 +138,11 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
 .method .code { background:#2c1c10; color:#f2e3d5; border-radius:8px; padding:16px 18px; font-family:'Courier New',monospace; font-size:.82rem; line-height:1.9; margin:14px 0; overflow-x:auto; }
 .method .code .k { color:#f5b971; }
 .method .code .c { color:#9db98c; }
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:18px 0; }
+.table-scroll .data-table { margin:0; }
 @media (max-width:640px){
   .method { padding:16px 14px 12px; }
-  .data-table { display:block; overflow-x:auto; white-space:nowrap; max-width:100%; font-size:.8rem; }
-  .data-table thead, .data-table tbody { display:table; width:100%; }
+  .table-scroll .data-table { font-size:.8rem; white-space:nowrap; }
   .method .code { padding:12px 14px; line-height:1.6; }
 }
 .faq-item { border-bottom:1px solid var(--border); }
@@ -231,9 +232,9 @@ footer a { color:#e9d8c6; }
 <div class="content">
   <a href="/leg-of-lamb-cooking-time-calculator/" class="back-link">← Lamb calculator</a>
   <h2 class="st">Cooking Times for a 1.5kg Leg of lamb</h2>
-  <table class="data-table"><thead><tr><th>Weight</th><th>Pink / rare</th><th>Medium</th><th>Well done</th></tr></thead><tbody>
+  <div class="table-scroll"><table class="data-table"><thead><tr><th>Weight</th><th>Pink / rare</th><th>Medium</th><th>Well done</th></tr></thead><tbody>
   <tr><td class="hl">1.5 kg</td><td>1 hr 20 min</td><td>1 hr 40 min</td><td>2 hr</td></tr>
-  </tbody></table>
+  </tbody></table></div>
   
   <div class="cta-grid">
     <div class="cta-card">
@@ -254,9 +255,9 @@ footer a { color:#e9d8c6; }
   <h2 class="st">How This Calculator Works — Formula &amp; Method</h2>
   <div class="method">
     <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard UK roasting guidance · applied deterministically · verify with a thermometer</p>
-    <table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
+    <div class="table-scroll"><table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
       <tr><td>Pink / rare — time per kg</td><td class="hl">20 min per 500 g (range 15–20/500 g)</td><td>UK roasting guides</td></tr><tr><td>Pink / rare — internal temp</td><td class="hl">55°C / 131°F</td><td>USDA / thermometer</td></tr><tr><td>Medium — time per kg</td><td class="hl">25 min per 500 g (range 20–25/500 g)</td><td>UK roasting guides</td></tr><tr><td>Medium — internal temp</td><td class="hl">60°C / 140°F</td><td>USDA / thermometer</td></tr><tr><td>Well done — time per kg</td><td class="hl">30 min per 500 g (range 25–30/500 g)</td><td>UK roasting guides</td></tr><tr><td>Well done — internal temp</td><td class="hl">70°C / 158°F</td><td>USDA / thermometer</td></tr><tr><td>Base offset</td><td class="hl">25 min</td><td>Standard</td></tr><tr><td>Oven</td><td class="hl">220°C sear for 20 min, then 180°C</td><td>Method</td></tr><tr><td>Resting</td><td class="hl">15 min</td><td>Best practice</td></tr>
-    </tbody></table>
+    </tbody></table></div>
     <div class="code">
 <span class="c">— Lamb cooking time —</span><br>
 <span class="k">total_min</span> = min_per_500g × (weight_g / 500) + base_offset<br>

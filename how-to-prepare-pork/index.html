@@ -137,10 +137,11 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
 .method .code { background:#2c1c10; color:#f2e3d5; border-radius:8px; padding:16px 18px; font-family:'Courier New',monospace; font-size:.82rem; line-height:1.9; margin:14px 0; overflow-x:auto; }
 .method .code .k { color:#f5b971; }
 .method .code .c { color:#9db98c; }
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:18px 0; }
+.table-scroll .data-table { margin:0; }
 @media (max-width:640px){
   .method { padding:16px 14px 12px; }
-  .data-table { display:block; overflow-x:auto; white-space:nowrap; max-width:100%; font-size:.8rem; }
-  .data-table thead, .data-table tbody { display:table; width:100%; }
+  .table-scroll .data-table { font-size:.8rem; white-space:nowrap; }
   .method .code { padding:12px 14px; line-height:1.6; }
 }
 .faq-item { border-bottom:1px solid var(--border); }
@@ -174,7 +175,7 @@ footer a { color:#e9d8c6; }
   <a href="/roast-pork-cooking-time-calculator/" class="cta-btn-white" style="background:var(--brand);color:#fff;margin-top:18px;">Open the Roast Pork Calculator →</a>
 </div></div>
 <div class="content">
-  <h2 class="st">Pork preparation steps</h2><table class="data-table"><thead><tr><th>Step</th><th>What to do</th><th>Why</th></tr></thead><tbody><tr><td class="hl">1. Score the rind</td><td>Deep cuts ~1 cm apart, not into the meat</td><td>Lets fat render → crackling</td></tr><tr><td class="hl">2. Dry the skin</td><td>Pat dry, leave uncovered in the fridge</td><td>Dry skin crisps up</td></tr><tr><td class="hl">3. Salt</td><td>Rub salt into the rind before roasting</td><td>Draws out moisture, seasons</td></tr><tr><td class="hl">4. Come to room temp</td><td>Rest out of the fridge 30–60 min</td><td>Even cooking</td></tr><tr><td class="hl">5. Blast then roast</td><td>220°C for 25 min, then 180°C</td><td>Crackling + tender meat</td></tr></tbody></table>
+  <h2 class="st">Pork preparation steps</h2><div class="table-scroll"><table class="data-table"><thead><tr><th>Step</th><th>What to do</th><th>Why</th></tr></thead><tbody><tr><td class="hl">1. Score the rind</td><td>Deep cuts ~1 cm apart, not into the meat</td><td>Lets fat render → crackling</td></tr><tr><td class="hl">2. Dry the skin</td><td>Pat dry, leave uncovered in the fridge</td><td>Dry skin crisps up</td></tr><tr><td class="hl">3. Salt</td><td>Rub salt into the rind before roasting</td><td>Draws out moisture, seasons</td></tr><tr><td class="hl">4. Come to room temp</td><td>Rest out of the fridge 30–60 min</td><td>Even cooking</td></tr><tr><td class="hl">5. Blast then roast</td><td>220°C for 25 min, then 180°C</td><td>Crackling + tender meat</td></tr></tbody></table></div>
   <div class="therm-notice" style="margin:20px 0;">🌡️ Whatever the time, doneness is decided by the <strong>internal temperature</strong> — check it with a meat thermometer.</div>
   
   <div class="cta-grid">

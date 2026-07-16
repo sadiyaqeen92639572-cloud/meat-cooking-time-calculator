@@ -129,10 +129,11 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
 .method .code { background:#2c1c10; color:#f2e3d5; border-radius:8px; padding:16px 18px; font-family:'Courier New',monospace; font-size:.82rem; line-height:1.9; margin:14px 0; overflow-x:auto; }
 .method .code .k { color:#f5b971; }
 .method .code .c { color:#9db98c; }
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:18px 0; }
+.table-scroll .data-table { margin:0; }
 @media (max-width:640px){
   .method { padding:16px 14px 12px; }
-  .data-table { display:block; overflow-x:auto; white-space:nowrap; max-width:100%; font-size:.8rem; }
-  .data-table thead, .data-table tbody { display:table; width:100%; }
+  .table-scroll .data-table { font-size:.8rem; white-space:nowrap; }
   .method .code { padding:12px 14px; line-height:1.6; }
 }
 .faq-item { border-bottom:1px solid var(--border); }
@@ -166,7 +167,7 @@ footer a { color:#e9d8c6; }
   <a href="/roast-beef-cooking-time-calculator/" class="cta-btn-white" style="background:var(--brand);color:#fff;margin-top:18px;">Open the Meat Cooking Calculators →</a>
 </div></div>
 <div class="content">
-  <h2 class="st">Roast dinner ingredients</h2><table class="data-table"><thead><tr><th>Component</th><th>Ingredients</th></tr></thead><tbody><tr><td class="hl">The roast</td><td>Beef, lamb, pork or chicken joint</td></tr><tr><td class="hl">Roast potatoes</td><td>Maris Piper potatoes, goose fat or oil, salt</td></tr><tr><td class="hl">Yorkshire puddings</td><td>Plain flour, eggs, milk, oil</td></tr><tr><td class="hl">Vegetables</td><td>Carrots, parsnips, broccoli, peas, cabbage</td></tr><tr><td class="hl">Gravy</td><td>Meat juices, stock, flour, red wine (optional)</td></tr><tr><td class="hl">Trimmings</td><td>Stuffing, pigs in blankets, horseradish / mint / apple sauce</td></tr></tbody></table>
+  <h2 class="st">Roast dinner ingredients</h2><div class="table-scroll"><table class="data-table"><thead><tr><th>Component</th><th>Ingredients</th></tr></thead><tbody><tr><td class="hl">The roast</td><td>Beef, lamb, pork or chicken joint</td></tr><tr><td class="hl">Roast potatoes</td><td>Maris Piper potatoes, goose fat or oil, salt</td></tr><tr><td class="hl">Yorkshire puddings</td><td>Plain flour, eggs, milk, oil</td></tr><tr><td class="hl">Vegetables</td><td>Carrots, parsnips, broccoli, peas, cabbage</td></tr><tr><td class="hl">Gravy</td><td>Meat juices, stock, flour, red wine (optional)</td></tr><tr><td class="hl">Trimmings</td><td>Stuffing, pigs in blankets, horseradish / mint / apple sauce</td></tr></tbody></table></div>
   <div class="therm-notice" style="margin:20px 0;">🌡️ Whatever the time, doneness is decided by the <strong>internal temperature</strong> — check it with a meat thermometer.</div>
   
   <div class="cta-grid">
