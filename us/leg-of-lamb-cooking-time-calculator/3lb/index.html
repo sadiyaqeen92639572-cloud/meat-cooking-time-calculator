@@ -144,6 +144,13 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
   .method { padding:16px 14px 12px; }
   .table-scroll .data-table { font-size:.8rem; white-space:nowrap; }
   .method .code { padding:12px 14px; line-height:1.6; }
+  .table-scroll { overflow-x:visible; }
+  .stack-table { white-space:normal; }
+  .stack-table thead { display:none; }
+  .stack-table, .stack-table tbody, .stack-table tr, .stack-table td { display:block; width:100%; }
+  .stack-table tr { border:1px solid var(--border); border-radius:8px; padding:8px 12px; margin-bottom:8px; }
+  .stack-table td { border:none; padding:4px 0; display:flex; justify-content:space-between; gap:12px; text-align:right; }
+  .stack-table td::before { content:attr(data-label); font-weight:600; color:var(--muted); text-align:left; flex-shrink:0; }
 }
 .faq-item { border-bottom:1px solid var(--border); }
 .faq-q { width:100%; background:none; border:none; text-align:left; padding:17px 0; font-size:.92rem; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:var(--text); }
@@ -255,8 +262,8 @@ footer a { color:#e9d8c6; }
   <h2 class="st">How This Calculator Works — Formula &amp; Method</h2>
   <div class="method">
     <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard US roasting guidance · applied deterministically · verify with a thermometer</p>
-    <div class="table-scroll"><table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
-      <tr><td>Pink / rare — time per lb</td><td class="hl">18 min/lb (range 15–20/500 g)</td><td>US roasting guides</td></tr><tr><td>Pink / rare — internal temp</td><td class="hl">131°F / 55°C</td><td>USDA / thermometer</td></tr><tr><td>Medium — time per lb</td><td class="hl">23 min/lb (range 20–25/500 g)</td><td>US roasting guides</td></tr><tr><td>Medium — internal temp</td><td class="hl">140°F / 60°C</td><td>USDA / thermometer</td></tr><tr><td>Well done — time per lb</td><td class="hl">27 min/lb (range 25–30/500 g)</td><td>US roasting guides</td></tr><tr><td>Well done — internal temp</td><td class="hl">158°F / 70°C</td><td>USDA / thermometer</td></tr><tr><td>Base offset</td><td class="hl">25 min</td><td>Standard</td></tr><tr><td>Oven</td><td class="hl">430°F sear for 20 min, then 350°F</td><td>Method</td></tr><tr><td>Resting</td><td class="hl">15 min</td><td>Best practice</td></tr>
+    <div class="table-scroll"><table class="data-table stack-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
+      <tr><td data-label="Constant">Pink / rare — time per lb</td><td class="hl" data-label="Value">18 min/lb (range 15–20/500 g)</td><td data-label="Source">US roasting guides</td></tr><tr><td data-label="Constant">Pink / rare — internal temp</td><td class="hl" data-label="Value">131°F / 55°C</td><td data-label="Source">USDA / thermometer</td></tr><tr><td data-label="Constant">Medium — time per lb</td><td class="hl" data-label="Value">23 min/lb (range 20–25/500 g)</td><td data-label="Source">US roasting guides</td></tr><tr><td data-label="Constant">Medium — internal temp</td><td class="hl" data-label="Value">140°F / 60°C</td><td data-label="Source">USDA / thermometer</td></tr><tr><td data-label="Constant">Well done — time per lb</td><td class="hl" data-label="Value">27 min/lb (range 25–30/500 g)</td><td data-label="Source">US roasting guides</td></tr><tr><td data-label="Constant">Well done — internal temp</td><td class="hl" data-label="Value">158°F / 70°C</td><td data-label="Source">USDA / thermometer</td></tr><tr><td data-label="Constant">Base offset</td><td class="hl" data-label="Value">25 min</td><td data-label="Source">Standard</td></tr><tr><td data-label="Constant">Oven</td><td class="hl" data-label="Value">430°F sear for 20 min, then 350°F</td><td data-label="Source">Method</td></tr><tr><td data-label="Constant">Resting</td><td class="hl" data-label="Value">15 min</td><td data-label="Source">Best practice</td></tr>
     </tbody></table></div>
     <div class="code">
 <span class="c">— Lamb cooking time —</span><br>

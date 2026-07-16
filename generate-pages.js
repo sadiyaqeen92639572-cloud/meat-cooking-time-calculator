@@ -470,6 +470,13 @@ p { color:#3d2f24; margin-bottom:14px; line-height:1.75; }
   .method { padding:16px 14px 12px; }
   .table-scroll .data-table { font-size:.8rem; white-space:nowrap; }
   .method .code { padding:12px 14px; line-height:1.6; }
+  .table-scroll { overflow-x:visible; }
+  .stack-table { white-space:normal; }
+  .stack-table thead { display:none; }
+  .stack-table, .stack-table tbody, .stack-table tr, .stack-table td { display:block; width:100%; }
+  .stack-table tr { border:1px solid var(--border); border-radius:8px; padding:8px 12px; margin-bottom:8px; }
+  .stack-table td { border:none; padding:4px 0; display:flex; justify-content:space-between; gap:12px; text-align:right; }
+  .stack-table td::before { content:attr(data-label); font-weight:600; color:var(--muted); text-align:left; flex-shrink:0; }
 }
 .faq-item { border-bottom:1px solid var(--border); }
 .faq-q { width:100%; background:none; border:none; text-align:left; padding:17px 0; font-size:.92rem; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:var(--text); }
@@ -625,8 +632,8 @@ function methodBlock(cfg, label, loc) {
   <h2 class="st">How This Calculator Works — Formula &amp; Method</h2>
   <div class="method">
     <p style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Source: standard ${loc.region} roasting guidance · applied deterministically · verify with a thermometer</p>
-    <div class="table-scroll"><table class="data-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td>${esc(r[0])}</td><td class="hl">${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}
+    <div class="table-scroll"><table class="data-table stack-table"><thead><tr><th>Constant</th><th>Value</th><th>Source</th></tr></thead><tbody>
+      ${rows.map(r => `<tr><td data-label="Constant">${esc(r[0])}</td><td class="hl" data-label="Value">${esc(r[1])}</td><td data-label="Source">${esc(r[2])}</td></tr>`).join('')}
     </tbody></table></div>
     <div class="code">
 <span class="c">— ${esc(label)} cooking time —</span><br>
