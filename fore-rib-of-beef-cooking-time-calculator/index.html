@@ -7,6 +7,10 @@
 <meta name="description" content="The king of roasts. Sear at 220°C, then 180°C. On the bone it stays juicier. Enter the weight for the exact cooking time, oven temperature and internal target.">
 <meta name="keywords" content="fore rib of beef cooking times calculator, rib of beef cooking time">
 <link rel="canonical" href="https://cookingmeatcalculator.com/fore-rib-of-beef-cooking-time-calculator/">
+<link rel="alternate" hreflang="en-GB" href="https://cookingmeatcalculator.com/fore-rib-of-beef-cooking-time-calculator/">
+<link rel="alternate" hreflang="en-US" href="https://cookingmeatcalculator.com/us/fore-rib-of-beef-cooking-time-calculator/">
+<link rel="alternate" hreflang="en" href="https://cookingmeatcalculator.com/us/fore-rib-of-beef-cooking-time-calculator/">
+<link rel="alternate" hreflang="x-default" href="https://cookingmeatcalculator.com/fore-rib-of-beef-cooking-time-calculator/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.png" type="image/png">
 <meta property="og:title" content="Fore rib of beef Cooking Time Calculator — Time, Temperature &amp; Method">
@@ -336,14 +340,11 @@ try{
   if(onHome&&!sessionStorage.getItem('mctc_geo')){
     sessionStorage.setItem('mctc_geo','1');
     var pref=null; try{pref=localStorage.getItem('mctc_loc')}catch(e){}
-    var wantUS;
-    if(pref){ wantUS=(pref==='us'); }
-    else {
-      var tz=''; try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      wantUS=/^America\/(New_York|Detroit|Chicago|Denver|Boise|Phoenix|Los_Angeles|Anchorage|Juneau|Sitka|Nome|Adak|Menominee|Indiana|Kentucky|North_Dakota)/.test(tz)||tz==='Pacific/Honolulu';
+    if(pref){
+      var wantUS=(pref==='us');
+      if(wantUS&&!isUS){ location.replace('/us/'); }
+      else if(!wantUS&&isUS){ location.replace('/'); }
     }
-    if(wantUS&&!isUS){ location.replace('/us/'); }
-    else if(!wantUS&&isUS){ location.replace('/'); }
   }
 }catch(e){}
 })();</script>

@@ -7,6 +7,10 @@
 <meta name="description" content="Free US meat cooking time calculator. Choose beef, lamb, pork or chicken, enter the weight in pounds and doneness → exact roasting time, oven temperature (°F), internal temperature and resting time.">
 <meta name="keywords" content="meat cooking time calculator, cooking time calculator by pound, roast beef cooking time per pound, how long to cook a roast, meat roasting time calculator">
 <link rel="canonical" href="https://cookingmeatcalculator.com/us/">
+<link rel="alternate" hreflang="en-GB" href="https://cookingmeatcalculator.com/">
+<link rel="alternate" hreflang="en-US" href="https://cookingmeatcalculator.com/us/">
+<link rel="alternate" hreflang="en" href="https://cookingmeatcalculator.com/us/">
+<link rel="alternate" hreflang="x-default" href="https://cookingmeatcalculator.com/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.png" type="image/png">
 <meta property="og:title" content="Meat Cooking Time Calculator (US) — Roast Beef, Lamb, Pork &amp; Chicken by the Pound">
@@ -330,14 +334,11 @@ try{
   if(onHome&&!sessionStorage.getItem('mctc_geo')){
     sessionStorage.setItem('mctc_geo','1');
     var pref=null; try{pref=localStorage.getItem('mctc_loc')}catch(e){}
-    var wantUS;
-    if(pref){ wantUS=(pref==='us'); }
-    else {
-      var tz=''; try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      wantUS=/^America\/(New_York|Detroit|Chicago|Denver|Boise|Phoenix|Los_Angeles|Anchorage|Juneau|Sitka|Nome|Adak|Menominee|Indiana|Kentucky|North_Dakota)/.test(tz)||tz==='Pacific/Honolulu';
+    if(pref){
+      var wantUS=(pref==='us');
+      if(wantUS&&!isUS){ location.replace('/us/'); }
+      else if(!wantUS&&isUS){ location.replace('/'); }
     }
-    if(wantUS&&!isUS){ location.replace('/us/'); }
-    else if(!wantUS&&isUS){ location.replace('/'); }
   }
 }catch(e){}
 })();</script>

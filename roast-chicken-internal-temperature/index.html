@@ -230,14 +230,11 @@ try{
   if(onHome&&!sessionStorage.getItem('mctc_geo')){
     sessionStorage.setItem('mctc_geo','1');
     var pref=null; try{pref=localStorage.getItem('mctc_loc')}catch(e){}
-    var wantUS;
-    if(pref){ wantUS=(pref==='us'); }
-    else {
-      var tz=''; try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      wantUS=/^America\/(New_York|Detroit|Chicago|Denver|Boise|Phoenix|Los_Angeles|Anchorage|Juneau|Sitka|Nome|Adak|Menominee|Indiana|Kentucky|North_Dakota)/.test(tz)||tz==='Pacific/Honolulu';
+    if(pref){
+      var wantUS=(pref==='us');
+      if(wantUS&&!isUS){ location.replace('/us/'); }
+      else if(!wantUS&&isUS){ location.replace('/'); }
     }
-    if(wantUS&&!isUS){ location.replace('/us/'); }
-    else if(!wantUS&&isUS){ location.replace('/'); }
   }
 }catch(e){}
 })();</script>

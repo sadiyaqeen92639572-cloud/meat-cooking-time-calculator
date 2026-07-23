@@ -689,8 +689,8 @@ function webAppJsonLd(name, url, loc) {
   return { '@type': 'WebApplication', name, url, applicationCategory: 'LifestyleApplication', operatingSystem: 'Any', inLanguage: loc.lang, offers: { '@type': 'Offer', price: '0', priceCurrency: loc.currency } };
 }
 
-// Slugs that exist in BOTH locales (hubs + cuts) → deep-link maps 1:1 across the switch.
-const MIRROR_SLUGS_JSON = JSON.stringify([...new Set([...HUBS.map(h => MEATS[h.key].slug), ...CUTS.map(c => c.slug)])]);
+const MIRROR_SET = new Set([...HUBS.map(h => MEATS[h.key].slug), ...CUTS.map(c => c.slug)]);
+const MIRROR_SLUGS_JSON = JSON.stringify([...MIRROR_SET]);
 const LOCALE_SWITCH_JS = `<script>(function(){
 var MIRROR=${MIRROR_SLUGS_JSON};
 var p=location.pathname; if(p.charAt(p.length-1)!=='/') p+='/';
@@ -710,20 +710,36 @@ try{
   if(onHome&&!sessionStorage.getItem('mctc_geo')){
     sessionStorage.setItem('mctc_geo','1');
     var pref=null; try{pref=localStorage.getItem('mctc_loc')}catch(e){}
-    var wantUS;
-    if(pref){ wantUS=(pref==='us'); }
-    else {
-      var tz=''; try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      wantUS=/^America\\/(New_York|Detroit|Chicago|Denver|Boise|Phoenix|Los_Angeles|Anchorage|Juneau|Sitka|Nome|Adak|Menominee|Indiana|Kentucky|North_Dakota)/.test(tz)||tz==='Pacific/Honolulu';
+    if(pref){
+      var wantUS=(pref==='us');
+      if(wantUS&&!isUS){ location.replace('/us/'); }
+      else if(!wantUS&&isUS){ location.replace('/'); }
     }
-    if(wantUS&&!isUS){ location.replace('/us/'); }
-    else if(!wantUS&&isUS){ location.replace('/'); }
   }
 }catch(e){}
 })();<\/script>`;
 
 function pageShell({ title, desc, keywords, canonical, jsonld, body, loc }) {
   const L = loc || LOCALES.uk;
+  const isUS = L.id === 'us';
+  const urlPath = canonical.replace(SITE_URL, '');
+  const p = urlPath;
+  const base = isUS ? p.substring(3) : p;
+  const mMatch = base.match(/^\/([^\/]+)\/$/);
+  const slug = mMatch ? mMatch[1] : null;
+  const mapped = (base === '/') || (slug && MIRROR_SET.has(slug));
+  
+  let hreflangTags = '';
+  if (mapped) {
+    const ukUrl = SITE_URL + base;
+    const usUrl = SITE_URL + '/us' + (base === '/' ? '/' : base);
+    hreflangTags = `
+<link rel="alternate" hreflang="en-GB" href="${ukUrl}">
+<link rel="alternate" hreflang="en-US" href="${usUrl}">
+<link rel="alternate" hreflang="en" href="${usUrl}">
+<link rel="alternate" hreflang="x-default" href="${ukUrl}">`;
+  }
+
   return `<!DOCTYPE html>
 <html lang="${L.lang}">
 <head>
@@ -732,7 +748,7 @@ function pageShell({ title, desc, keywords, canonical, jsonld, body, loc }) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <meta name="keywords" content="${esc(keywords)}">
-<link rel="canonical" href="${canonical}">
+<link rel="canonical" href="${canonical}">${hreflangTags}
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.png" type="image/png">
 <meta property="og:title" content="${esc(title)}">
