@@ -1011,6 +1011,40 @@ function buildHomepage(loc) {
   const hubGrid = HUBS.map(h => { const m = MEATS[h.key];
     return `<a class="link-card" href="/us/${m.slug}/"><div class="t">${m.emoji} ${esc(h.h1.replace(' Cooking Time Calculator', ''))}</div><div class="sub">by weight, °F</div></a>`;
   }).join('');
+  // Mirrors the UK homepage's hand-written "Popular/More Cuts & Guides" sections —
+  // these US-guide slugs are also generated (see us/ output), keep in sync with index.html if the guide list changes.
+  const popularCuts = [
+    ['beef-brisket-cooking-time-calculator', 'Beef Brisket', 'Low &amp; slow calculator'],
+    ['gammon-cooking-times-calculator', 'Gammon Cooking Times', 'Simmer or roast'],
+    ['pork-loin-cooking-time-calculator', 'Pork Loin', 'Crackling method'],
+    ['boneless-leg-of-lamb-cooking-time-calculator', 'Boneless Leg of Lamb', 'Rolled leg times'],
+    ['how-long-to-roast-a-chicken-at-325', 'Roast Chicken at 325°F', 'Times &amp; temperatures'],
+    ['how-long-to-roast-a-chicken-at-350', 'Roast Chicken at 350°F', 'Times &amp; temperatures'],
+  ];
+  const moreCuts = [
+    ['pulled-pork-cooking-time-calculator', 'Pulled Pork', 'Low &amp; slow shoulder'],
+    ['pork-shoulder-cooking-time-calculator', 'Pork Shoulder', 'Roast or slow-cook'],
+    ['pork-belly-cooking-time-calculator', 'Pork Belly', 'Crackling method'],
+    ['pork-tenderloin-cooking-time-calculator', 'Pork Tenderloin', 'Fast, lean cut'],
+    ['pork-joint-cooking-time-calculator', 'Pork Joint', 'General joint times'],
+    ['leg-of-pork-cooking-time-calculator', 'Leg of Pork', 'Bone-in leg times'],
+    ['roast-leg-of-lamb-cooking-time-calculator', 'Roast Leg of Lamb', 'Bone-in leg times'],
+    ['half-leg-of-lamb-cooking-time-calculator', 'Half Leg of Lamb', 'Smaller joint times'],
+    ['shoulder-of-lamb-cooking-time-calculator', 'Shoulder of Lamb', 'Slow-roast times'],
+    ['slow-roast-leg-of-lamb-cooking-time-calculator', 'Slow-Roast Leg of Lamb', 'Low &amp; slow method'],
+    ['butterflied-leg-of-lamb-cooking-time-calculator', 'Butterflied Leg of Lamb', 'BBQ &amp; hot oven'],
+    ['rack-of-lamb-cooking-time-calculator', 'Rack of Lamb', 'Fast, hot roast'],
+    ['silverside-beef-cooking-time-calculator', 'Silverside Beef', 'Slow-roast joint'],
+    ['topside-beef-cooking-time-calculator', 'Topside Beef', 'Classic roasting joint'],
+    ['fore-rib-of-beef-cooking-time-calculator', 'Fore Rib of Beef', 'Bone-in rib roast'],
+    ['whole-chicken-cooking-time-calculator', 'Whole Chicken', 'Classic roast times'],
+    ['chicken-crown-cooking-time-calculator', 'Chicken Crown', 'Boneless crown times'],
+    ['spatchcock-chicken-cooking-time-calculator', 'Spatchcock Chicken', 'Fast, even roast'],
+    ['stuffed-chicken-cooking-time-calculator', 'Stuffed Chicken', 'Adjusted timing'],
+  ];
+  const cutCard = ([slug, t, sub]) => `<a class="link-card" href="/us/${slug}/"><div class="t">${t}</div><div class="sub">${sub}</div></a>`;
+  const popularCutsGrid = popularCuts.map(cutCard).join('');
+  const moreCutsGrid = moreCuts.map(cutCard).join('') + `<a class="link-card" href="/"><div class="t">🇬🇧 UK Calculators</div><div class="sub">kg &amp; °C, all cuts</div></a>`;
   const body = `
 <header><div class="container">
   <div class="badge">🍖 Beef · Lamb · Pork · Chicken · Ham · °F · US</div>
@@ -1047,6 +1081,12 @@ function buildHomepage(loc) {
   <h2 class="st">Choose Your Meat Calculator</h2>
   <p>Dedicated calculators with cooking charts, cut variations and per-weight pages:</p>
   <div class="link-grid">${hubGrid}</div>
+
+  <h2 class="st">Popular Cuts &amp; Guides</h2>
+  <div class="link-grid">${popularCutsGrid}</div>
+
+  <h2 class="st">More Cuts &amp; Guides</h2>
+  <div class="link-grid">${moreCutsGrid}</div>
 
   <h2 class="st">Meat Cooking Times at a Glance (per pound, convection)</h2>
   <div class="table-scroll"><table class="data-table"><thead><tr><th>Meat</th><th>Time per pound</th><th>Oven</th><th>Internal temp</th></tr></thead><tbody>${glanceRows}</tbody></table></div>
