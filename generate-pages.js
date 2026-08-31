@@ -736,7 +736,6 @@ function pageShell({ title, desc, keywords, canonical, jsonld, body, loc }) {
     hreflangTags = `
 <link rel="alternate" hreflang="en-GB" href="${ukUrl}">
 <link rel="alternate" hreflang="en-US" href="${usUrl}">
-<link rel="alternate" hreflang="en" href="${usUrl}">
 <link rel="alternate" hreflang="x-default" href="${ukUrl}">`;
   }
 
@@ -1183,5 +1182,29 @@ ${uniq.map(u => `  <url><loc>${SITE_URL}${u}</loc><lastmod>${TODAY}</lastmod><ch
 </urlset>
 `;
 fs.writeFileSync(path.join(OUT, 'sitemap.xml'), sitemap);
+
+// ── 404 page (served with 404 status by Cloudflare Pages for unmatched routes) ──
+const notFoundHtml = `<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page not found — Meat Cooking Time Calculator</title>
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="stylesheet" href="/styles.css">
+<style>.nf-wrap{max-width:640px;margin:12vh auto;padding:0 20px;text-align:center}.nf-wrap h1{font-size:2.4rem;margin:0 0 .4em}.nf-wrap p{font-size:1.05rem;line-height:1.6;color:#555}.nf-wrap a.cta-btn-white{display:inline-block;margin-top:22px;background:var(--brand,#b23);color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600}</style>
+</head>
+<body>
+<div class="nf-wrap">
+<h1>Page not found</h1>
+<p>That page doesn't exist. It may have moved, or the link was mistyped.</p>
+<a class="cta-btn-white" href="/">Go to the Meat Cooking Time Calculator →</a>
+</div>
+</body>
+</html>
+`;
+fs.writeFileSync(path.join(OUT, '404.html'), notFoundHtml);
 
 console.log(`\n✅ Generated ${count} pages + sitemap.xml (${uniq.length} URLs incl. homepage).`);
