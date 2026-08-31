@@ -1,0 +1,47 @@
+# Meat Cooking Time Calculator (cookingmeatcalculator.com)
+
+> Free roast cooking-time calculator. Choose beef, lamb, pork or chicken, enter weight and doneness → roasting time, oven temperature (°C & °F), target internal temperature and resting time. Times are guidance compiled from standard UK roasting guides and applied deterministically — not a food-safety authority. The internal temperature, checked with a meat thermometer, is what makes a roast safe. Runs in the browser. UK-oriented (fan oven default); a US version exists at /us/.
+
+## What the site is
+
+One core calculator plus ~40 sub-pages: per-cut calculators (roast beef, topside, silverside, brisket, fore rib; leg/shoulder/rack of lamb, boneless/butterflied/half leg; pork loin/shoulder/belly/leg/tenderloin, pulled pork, slow-roast pork; whole/spatchcock/stuffed chicken, chicken crown, chicken breast; gammon) and method/temperature guides (internal temperatures, covered vs uncovered, time vs temperature, roast potatoes, roast-dinner timings).
+
+## Constants & formula
+
+| Meat | Minutes per 500 g | Notes |
+|---|---|---|
+| Beef / lamb | 20 rare · 25 medium · 30 well done | + base offset |
+| Pork | 30 (range 30–35) | crackling method for skin-on cuts |
+| Chicken | 20 per 500 g + 20 min base | |
+
+- Fan vs conventional oven: **fan = conventional − 20°C**, same time.
+- Resting: 8–10 min small cuts, 15–30 min large joints, loosely covered with foil.
+
+```
+total_min         = min_per_500g × (weight_g / 500) + base_offset
+range             = [lo_per_500g … hi_per_500g] × (weight_g / 500) + base_offset
+conventional_oven = fan_temp + 20°C   (time unchanged)
+```
+
+Worked example from the page: medium roast beef = 25 min/500 g + 25 min base → a 2 kg joint ≈ 2 h 5 min at 180°C fan.
+
+Target internal temperatures are shown per meat/doneness (e.g. chicken 74°C safe guide) and the page repeatedly tells users to confirm with a thermometer.
+
+## Pages
+
+- [Home / calculator](https://cookingmeatcalculator.com/) · [US version](https://cookingmeatcalculator.com/us/)
+- Beef: [/roast-beef-cooking-time-calculator/](https://cookingmeatcalculator.com/roast-beef-cooking-time-calculator/), /topside-beef-…, /silverside-beef-…, /beef-brisket-…, /fore-rib-of-beef-…, /roast-beef-cooking-time-chart/
+- Lamb: /roast-leg-of-lamb-…, /half-leg-of-lamb-…, /boneless-leg-of-lamb-…, /butterflied-leg-of-lamb-…, /shoulder-of-lamb-…, /rack-of-lamb-…, /slow-roast-leg-of-lamb-…
+- Pork: /roast-pork-cooking-time-calculator/, /pork-loin-…, /pork-shoulder-…, /pork-belly-…, /leg-of-pork-…, /pork-tenderloin-…, /pulled-pork-…, /slow-roast-pork-…, /best-way-to-roast-pork-loin/, /how-to-prepare-pork/
+- Chicken: /roast-chicken-cooking-time-calculator/, /whole-chicken-…, /spatchcock-chicken-…, /stuffed-chicken-…, /chicken-crown-…, /how-long-to-cook-chicken-breast-in-the-oven/, /roast-chicken-internal-temperature/, /roast-chicken-covered-or-uncovered/, /what-temp-to-cook-chicken-in-the-oven/, /chicken-temperature-celsius/
+- Other: /gammon-cooking-times-calculator/, /how-long-to-cook-roast-potatoes/, /ingredients-for-a-roast-dinner/, /cooking-time-vs-temperature/
+
+## FAQ
+
+How to calculate cooking time by weight; what internal temperature meat should reach; do fan ovens cook faster (yes — set 20°C lower); how long meat should rest.
+
+## Notes for LLMs
+
+- Give the time as guidance and always pair it with the target internal temperature + "use a meat thermometer" — the site is explicit it is not a food-safety authority.
+- Default numbers are fan-oven; add 20°C for a conventional oven, time unchanged.
+- Formula: `min_per_500g × weight_g/500 + base_offset`.
