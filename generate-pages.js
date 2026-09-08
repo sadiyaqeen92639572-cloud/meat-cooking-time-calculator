@@ -996,13 +996,13 @@ function buildHomepage(loc) {
     return `<tr><td class="hl">${m.label}${m.mode === 'doneness' ? ' (medium)' : ''}</td><td>${unitMin(d.per500, loc)} min/lb + ${d.base} min base</td><td>${m.ovenF}°F</td><td>${d.internalF}°F</td></tr>`;
   }).join('');
   const faq = [
-    ['How do I calculate meat cooking time by weight?', `Multiply the minutes per pound for your meat and doneness by the weight, then add the base offset. For example, medium roast beef is about ${unitMin(MEATS.beef.doneness.medium.per500, loc)} minutes per pound plus 25 minutes, so a 4 lb joint takes roughly <strong>${fmtTime(total(MEATS.beef.doneness.medium.per500, MEATS.beef.doneness.medium.base, toKg(4, loc)))}</strong> at 350°F. Always confirm with a meat thermometer.`],
-    ['What internal temperature should meat reach?', 'Beef and lamb: <strong>125°F rare, 140°F medium, 158°F well done</strong>. Pork: <strong>160°F</strong>. Chicken: <strong>165°F</strong>. Ham/gammon: <strong>154°F</strong>. Measure the thickest part with a meat thermometer.'],
-    ['Does a convection oven cook meat faster?', 'Yes. A convection (fan) oven runs about 25–35°F hotter than a conventional oven, so set it lower for the same cooking time. This calculator lets you choose fan or conventional.'],
-    ['How long should meat rest after roasting?', 'Rest small cuts 8–10 minutes and large roasts 15–30 minutes, loosely tented with foil. Resting lets the juices redistribute so the meat stays moist when carved.'],
+    ['What is the USDA safe minimum internal temperature for meat?', 'The USDA sets <strong>145°F</strong> for whole cuts of beef, pork, lamb and veal (steaks, chops and roasts) followed by a 3-minute rest, <strong>160°F</strong> for all ground meats, and <strong>165°F</strong> for all poultry and any stuffing. Fresh (raw) ham also goes to 145°F; precooked ham is reheated to 140°F.'],
+    ['How many minutes per pound do I cook a roast?', `US roasting guides run about ${unitMin(MEATS.beef.doneness.medium.per500, loc)} minutes per pound for medium roast beef at 350°F, ${unitMin(MEATS.pork.single.per500, loc)} minutes per pound for a pork joint, and ${unitMin(MEATS.chicken.single.per500, loc)} minutes per pound for whole chicken. Multiply by the weight, add the base offset the calculator shows, then finish by internal temperature — a 4 lb medium roast beef works out to roughly <strong>${fmtTime(total(MEATS.beef.doneness.medium.per500, MEATS.beef.doneness.medium.base, toKg(4, loc)))}</strong>.`],
+    ['Should I roast at 325°F or 350°F?', 'Both work. <strong>350°F</strong> is the common default — faster, with more surface browning. <strong>325°F</strong> is gentler and better for large or bone-in roasts that need an even center. Drop the dial about 25°F if you switch to a convection oven; this calculator has a convection / conventional toggle.'],
+    ['How long should a roast rest after the oven?', 'Rest steaks and small roasts 8–10 minutes, large roasts 15–30 minutes, loosely tented with foil. The internal temperature keeps climbing a few degrees during the rest (carryover cooking), so pull the roast just below its target.'],
   ];
   const jsonld = [
-    webAppJsonLd('Meat Cooking Time Calculator', canonical, loc),
+    webAppJsonLd(loc.id === 'us' ? 'US Meat Cooking Time Calculator' : 'Meat Cooking Time Calculator', canonical, loc),
     howToJsonLd('meat', loc),
     faqJsonLd(faq),
     { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: canonical }] },
@@ -1046,9 +1046,9 @@ function buildHomepage(loc) {
   const moreCutsGrid = moreCuts.map(cutCard).join('') + `<a class="link-card" href="/"><div class="t">🇬🇧 UK Calculators</div><div class="sub">kg &amp; °C, all cuts</div></a>`;
   const body = `
 <header><div class="container">
-  <div class="badge">🍖 Beef · Lamb · Pork · Chicken · Ham · °F · US</div>
-  <h1>Meat Cooking Time Calculator</h1>
-  <p>Choose your meat, enter the weight in pounds and doneness — get the exact roasting time, oven temperature (°F), internal target temperature and resting time.</p>
+  <div class="badge">🇺🇸 US Roasting Times · °F · Minutes per Pound · USDA Temps</div>
+  <h1>US Meat Cooking Time Calculator</h1>
+  <p>Built for US kitchens: pick beef, lamb, pork, chicken or ham, enter the weight in pounds and how you like it done. You get the roasting time, oven setting in °F (convection or conventional), the USDA-aligned internal target and how long to rest it.</p>
 </div></header>
 <div class="container">
 <div class="tool-wrapper">
@@ -1078,7 +1078,7 @@ function buildHomepage(loc) {
 </div>
 <div class="content">
   <h2 class="st">Choose Your Meat Calculator</h2>
-  <p>Dedicated calculators with cooking charts, cut variations and per-weight pages:</p>
+  <p>Each one has a °F cooking chart, cut-by-cut variations and per-pound pages for 3–8 lb roasts:</p>
   <div class="link-grid">${hubGrid}</div>
 
   <h2 class="st">Popular Cuts &amp; Guides</h2>
@@ -1087,8 +1087,21 @@ function buildHomepage(loc) {
   <h2 class="st">More Cuts &amp; Guides</h2>
   <div class="link-grid">${moreCutsGrid}</div>
 
-  <h2 class="st">Meat Cooking Times at a Glance (per pound, convection)</h2>
+  <h2 class="st">US Roasting Times by the Pound (convection oven)</h2>
+  <p>Starting points only — the calculator above adjusts for exact weight, doneness and oven type, and the internal temperature is what actually tells you it is done.</p>
   <div class="table-scroll"><table class="data-table"><thead><tr><th>Meat</th><th>Time per pound</th><th>Oven</th><th>Internal temp</th></tr></thead><tbody>${glanceRows}</tbody></table></div>
+
+  <h2 class="st">USDA Safe Minimum Internal Temperatures</h2>
+  <p>The current USDA Food Safety and Inspection Service minimums. Measure at the thickest part, away from bone. Where a rest time is listed, hold that temperature for that long before carving.</p>
+  <div class="table-scroll"><table class="data-table"><thead><tr><th>Food</th><th>Safe minimum</th><th>Rest</th></tr></thead><tbody>
+    <tr><td class="hl">Beef, pork, lamb, veal — steaks, chops, roasts</td><td>145°F</td><td>3 min</td></tr>
+    <tr><td class="hl">Ground beef, pork, lamb</td><td>160°F</td><td>—</td></tr>
+    <tr><td class="hl">All poultry — whole, pieces, ground, stuffing</td><td>165°F</td><td>—</td></tr>
+    <tr><td class="hl">Fresh (raw) ham</td><td>145°F</td><td>3 min</td></tr>
+    <tr><td class="hl">Precooked ham (reheating)</td><td>140°F</td><td>—</td></tr>
+    <tr><td class="hl">Egg dishes, casseroles</td><td>160°F</td><td>—</td></tr>
+  </tbody></table></div>
+  <p>The calculator uses a slightly higher pork target than the 145°F minimum for a firmer, more traditional roast — pull it earlier if you prefer pork just past pink.</p>
 
   ${ctaBlock(loc)}
   ${faqBlock(faq)}
@@ -1134,7 +1147,7 @@ function calculate(){
 function toggleFaq(b){ b.classList.toggle('open'); b.nextElementSibling.classList.toggle('open'); }
 onMeatChange();
 <\/script>`;
-  emit(loc.prefix.replace(/\/$/, ''), pageShell({ title: 'Meat Cooking Time Calculator (US) — Roast Beef, Lamb, Pork & Chicken by the Pound', desc: 'Free US meat cooking time calculator. Choose beef, lamb, pork or chicken, enter the weight in pounds and doneness → exact roasting time, oven temperature (°F), internal temperature and resting time.', keywords: 'meat cooking time calculator, cooking time calculator by pound, roast beef cooking time per pound, how long to cook a roast, meat roasting time calculator', canonical, jsonld, body, loc }));
+  emit(loc.prefix.replace(/\/$/, ''), pageShell({ title: 'Meat Cooking Time Calculator (US) — Roast Beef, Lamb, Pork & Chicken by the Pound', desc: 'US meat cooking time calculator in pounds and °F. Beef, lamb, pork, chicken and ham — roasting time, oven setting, USDA safe internal temperatures and rest time, for convection or conventional ovens.', keywords: 'meat cooking time calculator, cooking time calculator by pound, roast beef cooking time per pound, how long to cook a roast, meat roasting time calculator', canonical, jsonld, body, loc }));
 }
 buildHomepage(LOCALES.us);
 
